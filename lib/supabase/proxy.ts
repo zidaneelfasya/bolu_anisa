@@ -44,19 +44,48 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: If you remove getClaims() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
-  const { data } = await supabase.auth.getClaims();
-  const user = data?.claims;
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  const url = request.nextUrl.clone();
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
-    return NextResponse.redirect(url);
+  if (user) {
+    const role = user?.user_metadata?.role || "kasir";
+    const isAdminRoute = url.pathname.startsWith("/admin");
+    const isKasirRoute = url.pathname.startsWith("/kasir");
+    const isRoot = url.pathname === "/" || url.pathname === "/dashboard";
+    const isAuthRoute = url.pathname.startsWith("/auth") || url.pathname.startsWith("/login");
+
+    if (isAuthRoute) {
+      url.pathname = role === "admin" ? "/admin" : "/kasir";
+      return NextResponse.redirect(url);
+    }
+
+    if (isRoot) {
+      url.pathname = role === "admin" ? "/admin" : "/kasir";
+      return NextResponse.redirect(url);
+    }
+
+    if (role === "kasir" && isAdminRoute) {
+      url.pathname = "/kasir";
+      return NextResponse.redirect(url);
+    }
+    
+    if (role === "admin" && isKasirRoute) {
+      url.pathname = "/admin";
+      return NextResponse.redirect(url);
+    }
+  } else {
+    // Not logged in
+    const isProtectedRoute = 
+      url.pathname.startsWith("/admin") || 
+      url.pathname.startsWith("/kasir") || 
+      url.pathname === "/" || 
+      url.pathname === "/dashboard";
+      
+    if (isProtectedRoute) {
+      url.pathname = "/auth/login";
+      return NextResponse.redirect(url);
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

@@ -255,7 +255,25 @@ CREATE TABLE penjualan_detail (
     produk_id UUID REFERENCES produk(id) ON DELETE RESTRICT,
     jumlah INT NOT NULL CHECK (jumlah > 0),
     harga NUMERIC(15,2) NOT NULL CHECK (harga >= 0),
+    hpp_satuan NUMERIC(15,2) DEFAULT 0,
     subtotal NUMERIC(15,2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Histori Kalkulasi HPP
+CREATE TABLE kalkulasi_hpp (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    produk_id UUID REFERENCES produk(id) ON DELETE CASCADE,
+    tanggal DATE NOT NULL,
+    komposisi JSONB NOT NULL, -- Menyimpan detail array bahan dan packaging
+    total_biaya_bahan NUMERIC(15,2) DEFAULT 0,
+    total_biaya_packaging NUMERIC(15,2) DEFAULT 0,
+    upah_tenaga_kerja NUMERIC(15,2) DEFAULT 0,
+    total_biaya NUMERIC(15,2) DEFAULT 0,
+    target_hasil INT NOT NULL CHECK (target_hasil > 0),
+    hpp_satuan NUMERIC(15,2) NOT NULL,
+    catatan TEXT,
+    created_by UUID,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -497,6 +515,7 @@ ALTER TABLE cash_flow ENABLE ROW LEVEL SECURITY;
 ALTER TABLE biaya_operasional ENABLE ROW LEVEL SECURITY;
 ALTER TABLE penjualan ENABLE ROW LEVEL SECURITY;
 ALTER TABLE penjualan_detail ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kalkulasi_hpp ENABLE ROW LEVEL SECURITY;
 
 -- 2. Membuat Policy (Izin Akses Penuh) untuk setiap tabel
 CREATE POLICY "Allow All Access" ON bahan_baku FOR ALL USING (true) WITH CHECK (true);
@@ -517,3 +536,62 @@ CREATE POLICY "Allow All Access" ON cash_flow FOR ALL USING (true) WITH CHECK (t
 CREATE POLICY "Allow All Access" ON biaya_operasional FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow All Access" ON penjualan FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow All Access" ON penjualan_detail FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow All Access" ON kalkulasi_hpp FOR ALL USING (true) WITH CHECK (true);
+
+-- Terdapat di migration_profiles.sql, table profiles mengatur relasi auth.users
+-- Buat tabel profiles
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'kasir' CHECK (role IN ('admin', 'kasir')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Backfill data (Memasukkan akun yang sudah ada ke dalam tabel profiles)
+INSERT INTO public.profiles (id, email, role)
+SELECT 
+    id, 
+    email, 
+    COALESCE(raw_user_meta_data->>'role', 'kasir') as role 
+FROM auth.users
+ON CONFLICT (id) DO NOTHING;
+
+-- TRIGGER 1: Setiap kali ada akun baru mendaftar, otomatis masuk ke public.profiles
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, role)
+  VALUES (new.id, new.email, 'kasir');
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- TRIGGER 2: Sinkronisasi Role (Jika role diubah di public.profiles, otomatis perbarui metadata auth.users)
+CREATE OR REPLACE FUNCTION public.sync_role_to_metadata()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.role IS DISTINCT FROM OLD.role THEN
+    UPDATE auth.users
+    SET raw_user_meta_data = jsonb_set(
+      COALESCE(raw_user_meta_data, '{}'::jsonb), 
+      '{role}', 
+      to_jsonb(NEW.role)
+    )
+    WHERE id = NEW.id;
+  END IF;
+  
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_profile_role_updated ON public.profiles;
+CREATE TRIGGER on_profile_role_updated
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE PROCEDURE public.sync_role_to_metadata();

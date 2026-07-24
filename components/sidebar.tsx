@@ -26,48 +26,73 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
-const navGroups = [
-  {
-    items: [
-      { href: "/dashboard", label: "Dashboard", icon: Home },
-    ]
-  },
-  {
-    title: "Master Data",
-    items: [
-      { href: "/master/bahan-baku", label: "Bahan Baku", icon: Layers },
-      { href: "/master/packaging", label: "Packaging", icon: Package },
-      { href: "/master/produk", label: "Produk Kue", icon: ShoppingCart },
-      { href: "/hr/karyawan", label: "Karyawan", icon: Users },
-    ]
-  },
-  {
-    title: "Transaksi",
-    items: [
-      { href: "/transaksi/pembelian", label: "Pembelian", icon: DollarSign },
-      { href: "/transaksi/produksi", label: "Produksi", icon: Layers },
-      { href: "/transaksi/penjualan", label: "Penjualan", icon: ShoppingCart },
-    ]
-  },
-  {
-    title: "HR & Keuangan",
-    items: [
-      { href: "/hr/rate-borongan", label: "Rate Borongan", icon: DollarSign },
-      { href: "/hr/gaji", label: "Penggajian Harian", icon: DollarSign },
-      { href: "/keuangan/cash-flow", label: "Cash Flow", icon: DollarSign },
-      { href: "/laporan", label: "Laporan", icon: FileText },
-    ]
-  }
-];
-
-export function Sidebar() {
+export function Sidebar({ email = "user@example.com", role = "kasir" }: { email?: string, role?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/auth/login");
+  };
+
+  const navGroups = role === 'admin' ? [
+    {
+      items: [
+        { href: "/admin", label: "Dashboard", icon: Home },
+      ]
+    },
+    {
+      title: "Master Data",
+      items: [
+        { href: "/admin/master/bahan-baku", label: "Bahan Baku", icon: Layers },
+        { href: "/admin/master/packaging", label: "Packaging", icon: Package },
+        { href: "/admin/master/produk", label: "Produk Kue", icon: ShoppingCart },
+        { href: "/admin/hr/karyawan", label: "Karyawan", icon: Users },
+      ]
+    },
+    {
+      title: "Transaksi",
+      items: [
+        { href: "/admin/transaksi/pembelian", label: "Pembelian", icon: DollarSign },
+        { href: "/admin/transaksi/produksi", label: "Produksi", icon: Layers },
+        { href: "/admin/transaksi/penjualan", label: "Penjualan", icon: ShoppingCart },
+      ]
+    },
+    {
+      title: "HR & Keuangan",
+      items: [
+        { href: "/admin/hr/rate-borongan", label: "Rate Borongan", icon: DollarSign },
+        { href: "/admin/hr/gaji", label: "Penggajian Harian", icon: DollarSign },
+        { href: "/admin/keuangan/cash-flow", label: "Cash Flow", icon: DollarSign },
+        { href: "/admin/laporan", label: "Laporan", icon: FileText },
+      ]
+    },
+    {
+      title: "Pengaturan",
+      items: [
+        { href: "/admin/pengguna", label: "Pengguna Aplikasi", icon: Users },
+      ]
+    }
+  ] : [
+    {
+      items: [
+        { href: "/kasir", label: "Dashboard Kasir", icon: Home },
+        { href: "/kasir/transaksi/penjualan", label: "Penjualan", icon: ShoppingCart },
+      ]
+    }
+  ];
+
+  const roleDisplay = role === 'admin' ? 'Administrator' : 'Kasir';
+  const roleInitial = role === 'admin' ? 'AD' : 'KS';
 
   return (
     <div className="flex h-full w-64 flex-col bg-card border-r">
       <div className="flex h-14 items-center border-b px-4 shrink-0">
-        <Link href="/dashboard" className="text-xl font-bold text-primary flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <Link href={role === 'admin' ? "/admin" : "/kasir"} className="text-xl font-bold text-primary flex items-center gap-2 hover:opacity-90 transition-opacity">
           <Image 
             src="/image/logo_bolu_anisa.svg" 
             alt="Logo Bolu Anisa" 
@@ -90,7 +115,8 @@ export function Sidebar() {
               )}
               <div className="grid gap-1">
                 {group.items.map((item) => {
-                  const isActive = item.href === "/dashboard" 
+                  // Active state logic
+                  const isActive = (item.href === "/admin" || item.href === "/kasir")
                     ? pathname === item.href 
                     : pathname.startsWith(item.href);
                   
@@ -120,12 +146,12 @@ export function Sidebar() {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center w-full gap-3 p-2 rounded-md hover:bg-muted transition-colors text-left outline-none">
               <Avatar className="h-9 w-9">
-                <AvatarImage src="" alt="Admin" />
-                <AvatarFallback className="bg-primary/10 text-primary">AD</AvatarFallback>
+                <AvatarImage src="" alt={roleDisplay} />
+                <AvatarFallback className="bg-primary/10 text-primary">{roleInitial}</AvatarFallback>
               </Avatar>
               <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium leading-none truncate">Administrator</p>
-                <p className="text-xs text-muted-foreground truncate mt-1">admin@boluanisa.com</p>
+                <p className="text-sm font-medium leading-none truncate">{roleDisplay}</p>
+                <p className="text-xs text-muted-foreground truncate mt-1">{email}</p>
               </div>
               <MoreVertical className="h-4 w-4 text-muted-foreground" />
             </button>
@@ -144,9 +170,11 @@ export function Sidebar() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600 focus:text-red-600">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Keluar</span>
+            <DropdownMenuItem asChild className="text-red-600 focus:text-red-600 cursor-pointer">
+              <button onClick={handleLogout} className="flex items-center w-full">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Keluar</span>
+              </button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
