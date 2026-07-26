@@ -31,3 +31,15 @@ export async function updateProfileRole(id: string, newRole: string) {
   revalidatePath("/admin/pengguna");
   return { success: true };
 }
+
+export async function confirmUserEmail(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("confirm_user_email", { user_id: id });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/admin/pengguna");
+  return { success: true };
+}

@@ -9,10 +9,27 @@ import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { deletePembelian } from "./actions";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 export function PembelianClient({ data }: { data: any[] }) {
   const [search, setSearch] = useState("");
   const [selectedDetail, setSelectedDetail] = useState<any>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const handleDelete = (id: string) => {
+    startTransition(async () => {
+      const res = await deletePembelian(id);
+      if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Histori pembelian berhasil dihapus.");
+      }
+    });
+  };
 
   const filteredData = data.filter(item => 
     item.supplier?.toLowerCase().includes(search.toLowerCase()) ||
@@ -76,7 +93,7 @@ export function PembelianClient({ data }: { data: any[] }) {
                   <TableCell className="text-right font-bold text-red-600">
                     Rp {(item.total || 0).toLocaleString('id-ID')}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex items-center justify-end gap-2">
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -84,6 +101,31 @@ export function PembelianClient({ data }: { data: any[] }) {
                     >
                       <Eye className="h-4 w-4 mr-1" /> Detail
                     </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm" disabled={isPending}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Hapus Histori Pembelian?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tindakan ini akan mengembalikan stok (bahan baku & packaging) dan menghapus catatan pengeluaran dari arus kas. Tindakan ini tidak dapat dibatalkan.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={isPending}>Batal</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={(e) => { e.preventDefault(); handleDelete(item.id); }}
+                            className="bg-red-600 hover:bg-red-700"
+                            disabled={isPending}
+                          >
+                            {isPending ? "Menghapus..." : "Ya, Hapus"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))

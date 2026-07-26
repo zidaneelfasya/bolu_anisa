@@ -72,6 +72,12 @@ export function Sidebar({ email = "user@example.com", role = "kasir" }: { email?
       ]
     },
     {
+      title: "Akses Tambahan",
+      items: [
+        { href: "/kasir", label: "Masuk Mode Kasir", icon: Home },
+      ]
+    },
+    {
       title: "Pengaturan",
       items: [
         { href: "/admin/pengguna", label: "Pengguna Aplikasi", icon: Users },

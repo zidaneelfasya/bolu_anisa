@@ -69,11 +69,7 @@ export async function updateSession(request: NextRequest) {
       url.pathname = "/kasir";
       return NextResponse.redirect(url);
     }
-    
-    if (role === "admin" && isKasirRoute) {
-      url.pathname = "/admin";
-      return NextResponse.redirect(url);
-    }
+    // Admin has access to all routes, so no blocking for admin on isKasirRoute
   } else {
     // Not logged in
     const isProtectedRoute = 

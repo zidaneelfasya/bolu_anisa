@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateProfileRole } from "./actions";
+import { updateProfileRole, confirmUserEmail } from "./actions";
 import { toast } from "sonner";
 import {
   Table,
@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, ShieldCheck, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Shield, ShieldCheck, User, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 
@@ -44,6 +45,23 @@ export default function PenggunaClient({ initialData }: { initialData: any[] }) 
     }
   };
 
+  const handleConfirmEmail = async (userId: string) => {
+    toast.loading("Mengonfirmasi email...", { id: "confirm-email" });
+    
+    // Optimistic update
+    setProfiles(prev => prev.map(p => p.id === userId ? { ...p, email_confirmed: true } : p));
+    
+    const res = await confirmUserEmail(userId);
+    
+    if (res.error) {
+      toast.error(res.error, { id: "confirm-email" });
+      // Revert on error
+      setProfiles(initialData);
+    } else {
+      toast.success("Email berhasil dikonfirmasi", { id: "confirm-email" });
+    }
+  };
+
   return (
     <Card className="shadow-sm">
       <CardHeader>
@@ -62,6 +80,7 @@ export default function PenggunaClient({ initialData }: { initialData: any[] }) 
               <TableRow className="bg-slate-50/50">
                 <TableHead>Email Pengguna</TableHead>
                 <TableHead>Terdaftar Sejak</TableHead>
+                <TableHead>Status Email</TableHead>
                 <TableHead>Status Role</TableHead>
                 <TableHead className="text-right">Ubah Role</TableHead>
               </TableRow>
@@ -77,6 +96,29 @@ export default function PenggunaClient({ initialData }: { initialData: any[] }) 
                   </TableCell>
                   <TableCell>
                     {profile.created_at ? format(new Date(profile.created_at), "dd MMM yyyy", { locale: localeId }) : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {profile.email_confirmed ? (
+                      <Badge variant="outline" className="border-green-500 text-green-600 bg-green-50">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Terkonfirmasi
+                      </Badge>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="border-red-500 text-red-600 bg-red-50">
+                          <XCircle className="w-3 h-3 mr-1" />
+                          Belum Konfirmasi
+                        </Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="xs" 
+                          onClick={() => handleConfirmEmail(profile.id)}
+                          className="h-6 px-2 text-xs"
+                        >
+                          Konfirmasi
+                        </Button>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     {profile.role === 'admin' ? (
@@ -106,7 +148,7 @@ export default function PenggunaClient({ initialData }: { initialData: any[] }) 
               ))}
               {profiles.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                     Tidak ada pengguna ditemukan.
                   </TableCell>
                 </TableRow>

@@ -90,3 +90,20 @@ export async function submitPembelian(payload: any) {
   revalidatePath("/admin/transaksi/pembelian");
   return { success: true };
 }
+
+export async function deletePembelian(id: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("hapus_pembelian", {
+    p_pembelian_id: id,
+    p_user_id: null // TODO: pass actual user ID when auth is ready
+  });
+
+  if (error) {
+    console.error("Delete Pembelian Error:", error);
+    return { error: error.message || "Gagal menghapus pembelian." };
+  }
+
+  revalidatePath("/admin/transaksi/pembelian");
+  return { success: true };
+}
