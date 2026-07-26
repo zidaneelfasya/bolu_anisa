@@ -6,14 +6,16 @@ import { createClient } from "@/utils/supabase/server";
 async function MasterDataFetcher() {
   const supabase = await createClient();
 
-  const [resBahan, resPackaging] = await Promise.all([
+  const [resBahan, resPackaging, resProduk] = await Promise.all([
     supabase.from("bahan_baku").select("id, nama, satuan, harga_terakhir").is("deleted_at", null).order("nama"),
-    supabase.from("packaging").select("id, nama, jenis, harga_per_pcs").is("deleted_at", null).order("nama")
+    supabase.from("packaging").select("id, nama, jenis, harga_per_pcs").is("deleted_at", null).order("nama"),
+    supabase.from("produk").select("id, nama, harga_jual, hpp").is("deleted_at", null).order("nama")
   ]);
 
   return <CreatePembelianClient 
     masterBahan={resBahan.data || []} 
     masterPackaging={resPackaging.data || []} 
+    masterProduk={resProduk.data || []}
   />;
 }
 

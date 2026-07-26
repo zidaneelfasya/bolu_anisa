@@ -15,9 +15,10 @@ import { submitPembelian } from "../actions";
 type Props = {
   masterBahan: any[];
   masterPackaging: any[];
+  masterProduk: any[];
 };
 
-export function CreatePembelianClient({ masterBahan, masterPackaging }: Props) {
+export function CreatePembelianClient({ masterBahan, masterPackaging, masterProduk }: Props) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -26,6 +27,7 @@ export function CreatePembelianClient({ masterBahan, masterPackaging }: Props) {
   
   const [bahanList, setBahanList] = useState<any[]>([]);
   const [packList, setPackList] = useState<any[]>([]);
+  const [produkList, setProdukList] = useState<any[]>([]);
 
   // Handlers for Bahan Baku
   const addBahanRow = () => {
@@ -57,13 +59,29 @@ export function CreatePembelianClient({ masterBahan, masterPackaging }: Props) {
   };
   const removePackRow = (index: number) => setPackList(packList.filter((_, i) => i !== index));
 
+  // Handlers for Produk Jadi
+  const addProdukRow = () => {
+    setProdukList([...produkList, { id: "", jumlah: 0, harga: 0 }]);
+  };
+  const updateProdukRow = (index: number, field: string, value: any) => {
+    const newArr = [...produkList];
+    newArr[index][field] = value;
+    if (field === "id") {
+      const selected = masterProduk.find(p => p.id === value);
+      if (selected) newArr[index].harga = selected.hpp || 0;
+    }
+    setProdukList(newArr);
+  };
+  const removeProdukRow = (index: number) => setProdukList(produkList.filter((_, i) => i !== index));
+
   // Calc Total
   const totalBahan = bahanList.reduce((acc, curr) => acc + (Number(curr.jumlah) * Number(curr.harga)), 0);
   const totalPack = packList.reduce((acc, curr) => acc + (Number(curr.jumlah) * Number(curr.harga)), 0);
-  const grandTotal = totalBahan + totalPack;
+  const totalProduk = produkList.reduce((acc, curr) => acc + (Number(curr.jumlah) * Number(curr.harga)), 0);
+  const grandTotal = totalBahan + totalPack + totalProduk;
 
   const handleSubmit = async () => {
-    if (bahanList.length === 0 && packList.length === 0) {
+    if (bahanList.length === 0 && packList.length === 0 && produkList.length === 0) {
       toast.error("Minimal harus ada 1 item yang dibeli");
       return;
     }
@@ -78,13 +96,19 @@ export function CreatePembelianClient({ masterBahan, masterPackaging }: Props) {
       return;
     }
 
+    if (produkList.some(p => !p.id || p.jumlah <= 0 || p.harga < 0)) {
+      toast.error("Ada data produk jadi yang belum lengkap/valid");
+      return;
+    }
+
     setIsSubmitting(true);
     
     const payload = {
       tanggal,
       supplier,
       bahanBaku: bahanList,
-      packaging: packList
+      packaging: packList,
+      produk: produkList
     };
 
     const result = await submitPembelian(payload);
@@ -258,7 +282,70 @@ export function CreatePembelianClient({ masterBahan, masterPackaging }: Props) {
           </Table>
         </div>
       </div>
-
+      <div className="bg-white rounded-md border shadow-sm overflow-hidden">
+        <div className="bg-purple-50 p-4 border-b flex justify-between items-center">
+          <h3 className="font-semibold text-lg flex items-center text-purple-800">
+            <ShoppingCart className="mr-2 h-5 w-5 text-purple-600" />
+            Item Produk Jadi (Titip Jual / Kulakan)
+          </h3>
+          <Button size="sm" variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-100" onClick={addProdukRow}>
+            <Plus className="mr-2 h-4 w-4" /> Tambah Produk
+          </Button>
+        </div>
+        <div className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nama Produk</TableHead>
+                <TableHead className="w-[120px]">Qty</TableHead>
+                <TableHead className="w-[180px]">Harga Beli/HPP (Rp)</TableHead>
+                <TableHead className="w-[180px] text-right">Subtotal</TableHead>
+                <TableHead className="w-[60px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {produkList.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-6 text-muted-foreground italic">
+                    Belum ada produk jadi yang dipilih.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                produkList.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <Select value={item.id} onValueChange={(val) => updateProdukRow(index, "id", val)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih Produk..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {masterProduk.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.nama}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Input type="number" min="0" value={item.jumlah} onChange={(e) => updateProdukRow(index, "jumlah", e.target.value)} />
+                    </TableCell>
+                    <TableCell>
+                      <Input type="number" min="0" value={item.harga} onChange={(e) => updateProdukRow(index, "harga", e.target.value)} />
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-slate-700">
+                      Rp {(Number(item.jumlah) * Number(item.harga)).toLocaleString('id-ID')}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => removeProdukRow(index)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
       <div className="bg-slate-800 text-white p-6 rounded-md shadow-lg flex justify-between items-center sticky bottom-6 z-10">
         <div>
           <p className="text-slate-300 text-sm mb-1">Total Pembelian (Otomatis masuk Pengeluaran Kas)</p>

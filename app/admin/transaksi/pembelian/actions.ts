@@ -11,7 +11,8 @@ export async function getRiwayatPembelian() {
     .select(`
       *,
       pembelian_bahan_detail(id, jumlah, harga, subtotal, bahan_baku(id, nama, satuan)),
-      pembelian_packaging_detail(id, jumlah, harga, subtotal, packaging(id, nama))
+      pembelian_packaging_detail(id, jumlah, harga, subtotal, packaging(id, nama)),
+      pembelian_produk_detail(id, jumlah, harga, subtotal, produk(id, nama))
     `)
     .order("tanggal", { ascending: false })
     .order("created_at", { ascending: false });
@@ -73,6 +74,22 @@ export async function submitPembelian(payload: any) {
     if (packErr) {
       console.error("packErr", packErr);
       return { error: "Gagal menyimpan detail packaging." };
+    }
+  }
+
+  // 3.5 Insert Produk Jadi
+  if (payload.produk && payload.produk.length > 0) {
+    const produkToInsert = payload.produk.map((p: any) => ({
+      pembelian_id: pembelianId,
+      produk_id: p.id,
+      jumlah: p.jumlah,
+      harga: p.harga,
+      subtotal: p.jumlah * p.harga
+    }));
+    const { error: produkErr } = await supabase.from("pembelian_produk_detail").insert(produkToInsert);
+    if (produkErr) {
+      console.error("produkErr", produkErr);
+      return { error: "Gagal menyimpan detail produk jadi." };
     }
   }
 

@@ -217,6 +217,34 @@ export function PembelianClient({ data }: { data: any[] }) {
                 </div>
               )}
 
+              {selectedDetail.pembelian_produk_detail?.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="font-semibold text-purple-600 mb-2 text-sm">Produk Jadi</h4>
+                  <div className="border rounded-md">
+                    <Table>
+                      <TableHeader className="bg-slate-50">
+                        <TableRow>
+                          <TableHead className="py-2">Item</TableHead>
+                          <TableHead className="py-2 text-right">Qty</TableHead>
+                          <TableHead className="py-2 text-right">Harga Beli</TableHead>
+                          <TableHead className="py-2 text-right">Subtotal</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedDetail.pembelian_produk_detail.map((p: any) => (
+                          <TableRow key={p.id}>
+                            <TableCell className="py-2">{p.produk?.nama}</TableCell>
+                            <TableCell className="py-2 text-right">{p.jumlah} Pcs</TableCell>
+                            <TableCell className="py-2 text-right">Rp {(p.harga||0).toLocaleString('id-ID')}</TableCell>
+                            <TableCell className="py-2 text-right font-medium">Rp {(p.subtotal||0).toLocaleString('id-ID')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end mt-6 pt-4 border-t">
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground mb-1">Grand Total</div>
