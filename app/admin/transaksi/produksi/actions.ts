@@ -57,3 +57,61 @@ export async function getRiwayatProduksi() {
   return combinedData;
 }
 
+import { revalidatePath } from "next/cache";
+import { submitProduksi } from "./create/actions";
+
+export async function getProduksiById(id: string) {
+  const supabase = await createClient();
+  const { data: prod, error } = await supabase
+    .from("produksi")
+    .select(`
+      *,
+      produksi_bahan ( id, jumlah, harga_satuan, subtotal, bahan_id, bahan_baku(id, nama, satuan) ),
+      produksi_packaging ( id, jumlah, harga_satuan, subtotal, packaging_id, packaging(id, nama) ),
+      produksi_hasil ( id, jumlah, catatan, produk_id, produk(id, nama) )
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error || !prod) {
+    console.error("Error fetching produksi by id:", error);
+    return null;
+  }
+
+  // Ambil data gaji terkait
+  const { data: gajiData } = await supabase
+    .from("gaji_harian")
+    .select("id, karyawan_id, nominal, keterangan, jenis_gaji, referensi_id, karyawan ( id, nama )")
+    .eq("referensi_id", id);
+
+  return { ...prod, gaji_harian: gajiData || [] };
+}
+
+export async function deleteProduksi(id: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("hapus_produksi", {
+    p_produksi_id: id,
+    p_user_id: null
+  });
+
+  if (error) {
+    console.error("Delete Produksi Error:", error);
+    return { error: error.message || "Gagal menghapus produksi." };
+  }
+
+  revalidatePath("/admin/transaksi/produksi");
+  return { success: true };
+}
+
+export async function updateProduksi(id: string, payload: any) {
+  // 1. Hapus yang lama (kembalikan stok)
+  const delRes = await deleteProduksi(id);
+  if (delRes.error) return delRes;
+
+  // 2. Buat yang baru (dengan nomor yang sama)
+  const submitRes = await submitProduksi(payload);
+  if (submitRes.error) return submitRes;
+
+  return { success: true };
+}

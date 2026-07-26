@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { deletePembelian } from "./actions";
 import { useTransition } from "react";
@@ -32,7 +32,7 @@ export function PembelianClient({ data }: { data: any[] }) {
   };
 
   const filteredData = data.filter(item => 
-    item.supplier?.toLowerCase().includes(search.toLowerCase()) ||
+    (item.supplier || "").toLowerCase().includes(search.toLowerCase()) ||
     item.tanggal?.includes(search)
   );
 
@@ -101,6 +101,11 @@ export function PembelianClient({ data }: { data: any[] }) {
                     >
                       <Eye className="h-4 w-4 mr-1" /> Detail
                     </Button>
+                    <Link href={`/admin/transaksi/pembelian/${item.id}/edit`}>
+                      <Button variant="outline" size="sm" className="text-blue-600 hover:text-blue-700">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </Link>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="destructive" size="sm" disabled={isPending}>

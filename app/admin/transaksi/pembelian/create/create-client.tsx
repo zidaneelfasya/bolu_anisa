@@ -16,18 +16,21 @@ type Props = {
   masterBahan: any[];
   masterPackaging: any[];
   masterProduk: any[];
+  initialData?: any;
+  onSubmit?: (payload: any) => Promise<any>;
+  isEdit?: boolean;
 };
 
-export function CreatePembelianClient({ masterBahan, masterPackaging, masterProduk }: Props) {
+export function CreatePembelianClient({ masterBahan, masterPackaging, masterProduk, initialData, onSubmit, isEdit = false }: Props) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [tanggal, setTanggal] = useState(new Date().toISOString().split("T")[0]);
-  const [supplier, setSupplier] = useState("");
+  const [tanggal, setTanggal] = useState(initialData?.tanggal ? new Date(initialData.tanggal).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]);
+  const [supplier, setSupplier] = useState(initialData?.supplier || "");
   
-  const [bahanList, setBahanList] = useState<any[]>([]);
-  const [packList, setPackList] = useState<any[]>([]);
-  const [produkList, setProdukList] = useState<any[]>([]);
+  const [bahanList, setBahanList] = useState<any[]>(initialData?.bahanBaku || []);
+  const [packList, setPackList] = useState<any[]>(initialData?.packaging || []);
+  const [produkList, setProdukList] = useState<any[]>(initialData?.produk || []);
 
   // Handlers for Bahan Baku
   const addBahanRow = () => {
@@ -111,13 +114,13 @@ export function CreatePembelianClient({ masterBahan, masterPackaging, masterProd
       produk: produkList
     };
 
-    const result = await submitPembelian(payload);
+    const result = onSubmit ? await onSubmit(payload) : await submitPembelian(payload);
     
-    if (result.error) {
+    if (result?.error) {
       toast.error(result.error);
       setIsSubmitting(false);
     } else {
-      toast.success("Transaksi pembelian berhasil disimpan!");
+      toast.success(isEdit ? "Transaksi pembelian berhasil diperbarui!" : "Transaksi pembelian berhasil disimpan!");
       router.push("/admin/transaksi/pembelian");
     }
   };
@@ -129,8 +132,12 @@ export function CreatePembelianClient({ masterBahan, masterPackaging, masterProd
           <Button variant="outline" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-primary">Input Pembelian Baru</h2>
-          <p className="text-muted-foreground mt-1">Catat kulakan bahan dan packaging dari supplier.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-primary">
+            {isEdit ? "Edit Pembelian" : "Input Pembelian Baru"}
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            {isEdit ? "Ubah data pembelian bahan dan packaging dari supplier." : "Catat kulakan bahan dan packaging dari supplier."}
+          </p>
         </div>
       </div>
 

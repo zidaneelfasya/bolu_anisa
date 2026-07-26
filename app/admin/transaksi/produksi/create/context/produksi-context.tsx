@@ -69,11 +69,11 @@ const initialState: ProduksiState = {
 
 const ProduksiContext = createContext<ProduksiState>(initialState);
 
-export const ProduksiProvider = ({ children, masterData }: { children: React.ReactNode, masterData: ProduksiState["masterData"] }) => {
-  const [info, setInfo] = useState<ProduksiInfo>(initialState.info);
-  const [bahanBaku, setBahanBaku] = useState<BahanBakuItem[]>([]);
-  const [packaging, setPackaging] = useState<PackagingItem[]>([]);
-  const [hasil, setHasil] = useState<HasilProduksiItem[]>([]);
+export const ProduksiProvider = ({ children, masterData, initialData }: { children: React.ReactNode, masterData: ProduksiState["masterData"], initialData?: Partial<ProduksiState> }) => {
+  const [info, setInfo] = useState<ProduksiInfo>(initialData?.info || initialState.info);
+  const [bahanBaku, setBahanBaku] = useState<BahanBakuItem[]>(initialData?.bahanBaku || []);
+  const [packaging, setPackaging] = useState<PackagingItem[]>(initialData?.packaging || []);
+  const [hasil, setHasil] = useState<HasilProduksiItem[]>(initialData?.hasil || []);
 
   const reset = () => {
     setInfo(initialState.info);

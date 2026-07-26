@@ -24,9 +24,9 @@ export async function getProduksiMasterData() {
 export async function submitProduksi(payload: any) {
   const supabase = await createClient();
   
-  // Auto-generate nomor_produksi (format: PRD-YYYYMMDD-HHMMSS)
+  // Auto-generate nomor_produksi (format: PRD-YYYYMMDD-HHMMSS) jika tidak disediakan
   const dateObj = new Date();
-  const nomorProduksi = `PRD-${dateObj.getFullYear()}${(dateObj.getMonth()+1).toString().padStart(2, '0')}${dateObj.getDate().toString().padStart(2, '0')}-${dateObj.getHours().toString().padStart(2, '0')}${dateObj.getMinutes().toString().padStart(2, '0')}${dateObj.getSeconds().toString().padStart(2, '0')}`;
+  const nomorProduksi = payload.nomor_produksi || `PRD-${dateObj.getFullYear()}${(dateObj.getMonth()+1).toString().padStart(2, '0')}${dateObj.getDate().toString().padStart(2, '0')}-${dateObj.getHours().toString().padStart(2, '0')}${dateObj.getMinutes().toString().padStart(2, '0')}${dateObj.getSeconds().toString().padStart(2, '0')}`;
 
   // 1. Insert ke tabel produksi (Draft)
   const { data: produksiDraft, error: prodErr } = await supabase

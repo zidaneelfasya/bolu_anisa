@@ -21,7 +21,7 @@ const STEPS = [
   "Ringkasan"
 ];
 
-export function WizardContainer() {
+export function WizardContainer({ onSubmit, isEdit = false }: { onSubmit?: (payload: any) => Promise<any>, isEdit?: boolean }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -45,13 +45,14 @@ export function WizardContainer() {
     setIsSubmitting(true);
     const payload = { info, bahanBaku, packaging, hasil };
     
-    const result = await submitProduksi(payload);
+    // Use custom onSubmit if provided, else use default submitProduksi
+    const result = onSubmit ? await onSubmit(payload) : await submitProduksi(payload);
     
-    if (result.error) {
+    if (result?.error) {
       toast.error(result.error);
       setIsSubmitting(false);
     } else {
-      toast.success("Produksi berhasil diselesaikan!");
+      toast.success(isEdit ? "Produksi berhasil diperbarui!" : "Produksi berhasil diselesaikan!");
       // Redirect ke halaman history/list produksi
       router.push("/admin/transaksi/produksi");
     }

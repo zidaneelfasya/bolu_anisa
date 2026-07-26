@@ -4,14 +4,30 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Eye, CheckCircle2, Factory } from "lucide-react";
+import { Search, Plus, Eye, CheckCircle2, Factory, Trash2, Pencil } from "lucide-react";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { deleteProduksi } from "./actions";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 export function ProduksiClient({ data }: { data: any[] }) {
   const [search, setSearch] = useState("");
   const [selectedDetail, setSelectedDetail] = useState<any>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const handleDelete = (id: string) => {
+    startTransition(async () => {
+      const res = await deleteProduksi(id);
+      if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Histori produksi berhasil dihapus.");
+      }
+    });
+  };
 
   // Fungsi kalkulasi untuk meringkas data
   const processedData = data.map((item) => {
@@ -123,7 +139,7 @@ export function ProduksiClient({ data }: { data: any[] }) {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex items-center justify-end gap-2">
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -131,6 +147,36 @@ export function ProduksiClient({ data }: { data: any[] }) {
                     >
                       <Eye className="h-4 w-4 mr-1" /> Detail
                     </Button>
+                    <Link href={`/admin/transaksi/produksi/${item.id}/edit`}>
+                      <Button variant="outline" size="sm" className="text-blue-600 hover:text-blue-700">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm" disabled={isPending}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Hapus Histori Produksi?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tindakan ini akan mengembalikan stok (bahan baku & packaging) dan menghapus catatan gaji serta omset. Stok produk jadi akan ditarik. Tindakan ini tidak dapat dibatalkan.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={isPending}>Batal</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={(e) => { e.preventDefault(); handleDelete(item.id); }}
+                            className="bg-red-600 hover:bg-red-700"
+                            disabled={isPending}
+                          >
+                            {isPending ? "Menghapus..." : "Ya, Hapus"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))

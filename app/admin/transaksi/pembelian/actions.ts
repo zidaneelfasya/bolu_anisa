@@ -18,6 +18,7 @@ export async function getRiwayatPembelian() {
     .order("created_at", { ascending: false });
 
   if (error) {
+    console.error("Error fetching riwayat pembelian:", error);
     return [];
   }
 
@@ -122,5 +123,35 @@ export async function deletePembelian(id: string) {
   }
 
   revalidatePath("/admin/transaksi/pembelian");
+  return { success: true };
+}
+
+export async function getPembelianById(id: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("pembelian")
+    .select(`
+      *,
+      pembelian_bahan_detail(id, jumlah, harga, subtotal, bahan_id, bahan_baku(id, nama, satuan)),
+      pembelian_packaging_detail(id, jumlah, harga, subtotal, packaging_id, packaging(id, nama)),
+      pembelian_produk_detail(id, jumlah, harga, subtotal, produk_id, produk(id, nama))
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    console.error("Error fetching pembelian by id:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function updatePembelian(id: string, payload: any) {
+  const delRes = await deletePembelian(id);
+  if (delRes.error) return delRes;
+
+  const submitRes = await submitPembelian(payload);
+  if (submitRes.error) return submitRes;
+
   return { success: true };
 }
