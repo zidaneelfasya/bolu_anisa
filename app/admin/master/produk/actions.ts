@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import * as xlsx from "xlsx";
 
 export async function getProduk() {
   const supabase = await createClient();
@@ -172,4 +173,77 @@ export async function getKalkulasiHppHistory(produkId: string) {
     return [];
   }
   return data;
+}
+
+export async function importProduk(formData: FormData) {
+  try {
+    const file = formData.get('file') as File;
+    if (!file) {
+      return { error: 'File tidak ditemukan' };
+    }
+
+    const buffer = await file.arrayBuffer();
+    const workbook = xlsx.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    
+    const rawData = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+    
+    // Header is at row index 3, data starts at index 4
+    if (rawData.length <= 4) {
+      return { error: 'File kosong atau format tidak sesuai' };
+    }
+
+    const productsToInsert = [];
+    
+    for (let i = 4; i < rawData.length; i++) {
+      const row = rawData[i];
+      if (!row || row.length === 0 || !row[0]) continue; // Skip empty rows
+
+      const name = row[0]?.toString().trim();
+      const categoryNameRaw = row[1]?.toString().trim() || 'Lainnya';
+      const keteranganRaw = row[3]?.toString().trim() || null;
+      const baseHargaJual = parseFloat(row[6]) || 0;
+      const hargaJualRaw = baseHargaJual - (baseHargaJual * 0.3); // Kurangi 30%
+      const hargaModalRaw = parseFloat(row[8]) || 0;
+      const stokRaw = parseInt(row[9]) || 0;
+
+      if (!name) continue;
+
+      productsToInsert.push({
+        nama: name,
+        kategori: categoryNameRaw,
+        keterangan: keteranganRaw,
+        harga_jual: hargaJualRaw,
+        hpp: hargaModalRaw,
+        stok: stokRaw,
+        berat: "" // Provide empty string or null depending on table constraint
+      });
+    }
+
+    if (productsToInsert.length === 0) {
+      return { error: 'Tidak ada data produk valid yang ditemukan' };
+    }
+
+    const supabase = await createClient();
+    
+    // Insert products in batches if large, but for typical excel files this is fine
+    const { error } = await supabase.from('produk').insert(productsToInsert);
+
+    if (error) {
+      console.error('Error inserting imported products:', error);
+      return { error: error.message };
+    }
+
+    revalidatePath('/admin/master/produk');
+    
+    return { 
+      success: true, 
+      message: `Berhasil mengimpor ${productsToInsert.length} produk.` 
+    };
+
+  } catch (error: any) {
+    console.error('Error importing products:', error);
+    return { error: error.message || 'Gagal mengimpor produk' };
+  }
 }

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import * as xlsx from "xlsx";
 
 export async function getBahanBaku() {
   const supabase = await createClient();
@@ -93,4 +94,74 @@ export async function updateBahanBaku(id: string, formData: FormData) {
 
   revalidatePath("/admin/master/bahan-baku");
   return { success: true };
+}
+
+export async function importBahanBaku(formData: FormData) {
+  try {
+    const file = formData.get('file') as File;
+    if (!file) {
+      return { error: 'File tidak ditemukan' };
+    }
+
+    const buffer = await file.arrayBuffer();
+    const workbook = xlsx.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    
+    const rawData = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+    
+    // Header is at row index 0, data starts at index 1
+    if (rawData.length <= 1) {
+      return { error: 'File kosong atau format tidak sesuai' };
+    }
+
+    const dataToInsert = [];
+    
+    for (let i = 1; i < rawData.length; i++) {
+      const row = rawData[i];
+      if (!row || row.length === 0 || !row[0]) continue; // Skip empty rows
+
+      const nama = row[0]?.toString().trim();
+      const harga = parseFloat(row[1]) || 0;
+      const satuan = row[2]?.toString().trim() || "";
+
+      if (!nama) continue;
+
+      dataToInsert.push({
+        nama,
+        kategori: 'Belum Dikategorikan',
+        satuan,
+        minimum_stok: 0,
+        supplier: null,
+        keterangan: null,
+        stok: 0,
+        harga_terakhir: harga,
+        harga_rata_rata: harga
+      });
+    }
+
+    if (dataToInsert.length === 0) {
+      return { error: 'Tidak ada data bahan baku valid yang ditemukan' };
+    }
+
+    const supabase = await createClient();
+    
+    const { error } = await supabase.from('bahan_baku').insert(dataToInsert);
+
+    if (error) {
+      console.error('Error inserting imported bahan baku:', error);
+      return { error: error.message };
+    }
+
+    revalidatePath('/admin/master/bahan-baku');
+    
+    return { 
+      success: true, 
+      message: `Berhasil mengimpor ${dataToInsert.length} bahan baku.` 
+    };
+
+  } catch (error: any) {
+    console.error('Error importing bahan baku:', error);
+    return { error: error.message || 'Gagal mengimpor bahan baku' };
+  }
 }

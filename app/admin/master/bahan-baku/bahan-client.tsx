@@ -6,14 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Upload } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { addBahanBaku, deleteBahanBaku, updateBahanBaku } from "./actions";
+import { addBahanBaku, deleteBahanBaku, updateBahanBaku, importBahanBaku } from "./actions";
 import { toast } from "sonner";
 
 export function BahanBakuClient({ initialData }: { initialData: any[] }) {
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
 
@@ -38,6 +40,28 @@ export function BahanBakuClient({ initialData }: { initialData: any[] }) {
     }
   }
 
+  const handleImportSubmit = async () => {
+    if (!importFile) return;
+    if (!confirm("Apakah Anda yakin ingin mengimport file ini?")) return;
+
+    setIsSubmitting(true);
+    const formData = new FormData();
+    formData.append("file", importFile);
+    
+    const result = await importBahanBaku(formData);
+    
+    setIsSubmitting(false);
+    
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success(result.message || "Bahan baku berhasil diimpor");
+      setIsImportDialogOpen(false);
+      setImportFile(null);
+      window.location.reload();
+    }
+  };
+
   async function handleDelete(id: string, nama: string) {
     if (!confirm(`Apakah Anda yakin ingin menghapus bahan baku ${nama}?`)) return;
 
@@ -57,15 +81,53 @@ export function BahanBakuClient({ initialData }: { initialData: any[] }) {
           <p className="text-muted-foreground mt-1">Kelola data seluruh bahan produksi toko.</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) setEditingItem(null);
-        }}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90" onClick={() => setEditingItem(null)}>
-              <Plus className="mr-2 h-4 w-4" /> Tambah Bahan
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={isImportDialogOpen} onOpenChange={(val) => {
+            setIsImportDialogOpen(val);
+            if (!val) setImportFile(null);
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="bg-background">
+                <Upload className="mr-2 h-4 w-4" /> Import Excel
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Import Bahan Baku dari Excel</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Input 
+                  type="file" 
+                  accept=".xlsx,.xls" 
+                  onChange={(e) => setImportFile(e.target.files?.[0] || null)} 
+                  disabled={isSubmitting}
+                />
+                {importFile && (
+                  <p className="text-sm text-muted-foreground">
+                    File terpilih: <span className="font-medium text-foreground">{importFile.name}</span>
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button type="button" variant="outline" onClick={() => setIsImportDialogOpen(false)} disabled={isSubmitting}>
+                  Batal
+                </Button>
+                <Button onClick={handleImportSubmit} disabled={!importFile || isSubmitting}>
+                  {isSubmitting ? "Mengimpor..." : "Simpan"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) setEditingItem(null);
+          }}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90" onClick={() => setEditingItem(null)}>
+                <Plus className="mr-2 h-4 w-4" /> Tambah Bahan
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[550px]">
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold">{editingItem ? "Edit" : "Tambah"} Bahan Baku</DialogTitle>
@@ -106,6 +168,7 @@ export function BahanBakuClient({ initialData }: { initialData: any[] }) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 max-w-sm">

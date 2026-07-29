@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit, Trash2, Calculator } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Calculator, Upload } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { addProduk, deleteProduk, updateProduk } from "./actions";
+import { addProduk, deleteProduk, updateProduk, importProduk } from "./actions";
 import { toast } from "sonner";
 import { KalkulatorHppModal } from "./kalkulator-hpp-modal";
 
@@ -16,6 +16,8 @@ export function ProdukClient({ initialData }: { initialData: any[] }) {
   const [data, setData] = useState(initialData);
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isHppModalOpen, setIsHppModalOpen] = useState(false);
@@ -41,6 +43,28 @@ export function ProdukClient({ initialData }: { initialData: any[] }) {
     } else {
       toast.success("Produk berhasil ditambahkan");
       setIsDialogOpen(false);
+      window.location.reload();
+    }
+  };
+
+  const handleImportSubmit = async () => {
+    if (!importFile) return;
+    if (!confirm("Apakah Anda yakin ingin mengimport file ini?")) return;
+
+    setIsSubmitting(true);
+    const formData = new FormData();
+    formData.append("file", importFile);
+    
+    const result = await importProduk(formData);
+    
+    setIsSubmitting(false);
+    
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success(result.message || "Produk berhasil diimpor");
+      setIsImportDialogOpen(false);
+      setImportFile(null);
       window.location.reload();
     }
   };
@@ -84,13 +108,50 @@ export function ProdukClient({ initialData }: { initialData: any[] }) {
           <h2 className="text-3xl font-bold tracking-tight text-primary">Master Produk Kue</h2>
           <p className="text-muted-foreground mt-1">Kelola data produk kue jadi yang akan dijual.</p>
         </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" /> Tambah Produk
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={isImportDialogOpen} onOpenChange={(val) => {
+            setIsImportDialogOpen(val);
+            if (!val) setImportFile(null);
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="bg-background">
+                <Upload className="mr-2 h-4 w-4" /> Import Excel
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Import Produk dari Excel</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Input 
+                  type="file" 
+                  accept=".xlsx,.xls" 
+                  onChange={(e) => setImportFile(e.target.files?.[0] || null)} 
+                  disabled={isSubmitting}
+                />
+                {importFile && (
+                  <p className="text-sm text-muted-foreground">
+                    File terpilih: <span className="font-medium text-foreground">{importFile.name}</span>
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button type="button" variant="outline" onClick={() => setIsImportDialogOpen(false)} disabled={isSubmitting}>
+                  Batal
+                </Button>
+                <Button onClick={handleImportSubmit} disabled={!importFile || isSubmitting}>
+                  {isSubmitting ? "Mengimpor..." : "Simpan"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90">
+                <Plus className="mr-2 h-4 w-4" /> Tambah Produk
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Tambah Produk Baru</DialogTitle>
@@ -137,6 +198,7 @@ export function ProdukClient({ initialData }: { initialData: any[] }) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
 
         {/* Dialog Edit Produk */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
