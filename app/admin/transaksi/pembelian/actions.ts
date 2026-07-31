@@ -147,11 +147,23 @@ export async function getPembelianById(id: string) {
 }
 
 export async function updatePembelian(id: string, payload: any) {
-  const delRes = await deletePembelian(id);
-  if (delRes.error) return delRes;
+  const supabase = await createClient();
 
-  const submitRes = await submitPembelian(payload);
-  if (submitRes.error) return submitRes;
+  const { error } = await supabase.rpc("edit_pembelian", {
+    p_pembelian_id: id,
+    p_tanggal: payload.tanggal,
+    p_supplier: payload.supplier || null,
+    p_bahan: payload.bahanBaku || [],
+    p_pack: payload.packaging || [],
+    p_produk: payload.produk || [],
+    p_user_id: null // TODO: pass actual user ID when auth is ready
+  });
 
+  if (error) {
+    console.error("Edit Pembelian Error:", error);
+    return { error: error.message || "Gagal mengedit pembelian." };
+  }
+
+  revalidatePath("/admin/transaksi/pembelian");
   return { success: true };
 }

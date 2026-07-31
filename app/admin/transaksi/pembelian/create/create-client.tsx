@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trash2, ShoppingCart, ArrowLeft, Plus } from "lucide-react";
+import { Trash2, ShoppingCart, ArrowLeft, Plus, Info } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -140,6 +140,16 @@ export function CreatePembelianClient({ masterBahan, masterPackaging, masterProd
           </p>
         </div>
       </div>
+
+      {isEdit && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-4 flex gap-3 shadow-sm">
+          <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-semibold mb-1">Informasi Penyesuaian Stok</p>
+            <p>Perubahan pada item maupun kuantitas (qty) akan secara otomatis menyesuaikan stok barang dan riwayat arus kas. Sistem akan menyesuaikan selisih stok secara aman agar tidak terjadi error.</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-6 bg-white p-6 rounded-md border shadow-sm">
         <div className="space-y-2">
