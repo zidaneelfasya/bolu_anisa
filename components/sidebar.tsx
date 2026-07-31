@@ -66,7 +66,7 @@ export function Sidebar({ email = "user@example.com", role = "kasir" }: { email?
       title: "HR & Keuangan",
       items: [
         { href: "/admin/hr/rate-borongan", label: "Rate Borongan", icon: DollarSign },
-        { href: "/admin/hr/gaji", label: "Penggajian Harian", icon: DollarSign },
+        { href: "/admin/hr/gaji", label: "Penggajian", icon: DollarSign },
         { href: "/admin/keuangan/cash-flow", label: "Cash Flow", icon: DollarSign },
         { href: "/admin/laporan", label: "Laporan", icon: FileText },
       ]
