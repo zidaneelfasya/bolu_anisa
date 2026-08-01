@@ -7,17 +7,17 @@ import { DollarSign, Layers, Package, Users, TrendingUp, Clock, Loader2, ArrowUp
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Bar, BarChart, Tooltip } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
-import { getDashboardMetrics } from "./actions";
+import { getDashboardMetrics, getHarianMetrics } from "./actions";
 import Link from "next/link";
 
 const harianChartConfig = {
-  estimatedGross: {
-    label: "Profit Estimasi",
-    color: "hsl(var(--primary))",
+  pemasukan: {
+    label: "Pemasukan",
+    color: "#10b981", // emerald-500
   },
-  actualGross: {
-    label: "Gross Profit Asli",
-    color: "hsl(var(--chart-2))",
+  pengeluaran: {
+    label: "Pengeluaran",
+    color: "#e11d48", // rose-600
   }
 };
 
@@ -36,6 +36,13 @@ export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Provide safe fallback for date strings
+  const initialDateStr = new Date().toISOString().split("T")[0];
+  const [startDate, setStartDate] = useState(initialDateStr);
+  const [endDate, setEndDate] = useState(initialDateStr);
+  const [harianData, setHarianData] = useState<any>(null);
+  const [harianLoading, setHarianLoading] = useState(true);
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -49,6 +56,23 @@ export default function DashboardPage() {
     }
     loadData();
   }, []);
+
+  useEffect(() => {
+    async function loadHarian() {
+      setHarianLoading(true);
+      try {
+        const metrics = await getHarianMetrics(startDate, endDate);
+        setHarianData(metrics);
+      } catch (error) {
+        console.error("Error loading harian metrics:", error);
+      } finally {
+        setHarianLoading(false);
+      }
+    }
+    if (startDate && endDate) {
+      loadHarian();
+    }
+  }, [startDate, endDate]);
 
   if (loading) {
     return (
@@ -88,144 +112,221 @@ export default function DashboardPage() {
 
         {/* ======================= TAB HARIAN ======================= */}
         <TabsContent value="harian" className="space-y-6 outline-none">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="hover:shadow-md transition-all border-l-4 border-l-amber-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  Profit Estimasi
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-amber-600">
-                  Rp {data.harian.estimatedGrossProfit.toLocaleString('id-ID')}
-                </div>
-                <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                  <div className="flex justify-between font-medium">
-                    <span>Estimasi Pendapatan (Produk Terjual 100%):</span>
-                    <span className="text-slate-700">Rp {data.harian.estimatedRevenue.toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="flex justify-between text-red-500">
-                    <span>HPP Estimasi (Modal Semua Produk):</span>
-                    <span>-Rp {(data.harian.estimatedRevenue - data.harian.salary - data.harian.estimatedGrossProfit).toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="flex justify-between text-red-500">
-                    <span>Biaya Gaji (Harian & Borongan):</span>
-                    <span>-Rp {data.harian.salary.toLocaleString('id-ID')}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-all border-l-4 border-l-blue-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-blue-500" />
-                  Gross Profit Asli
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
-                  Rp {data.harian.actualGrossProfit.toLocaleString('id-ID')}
-                </div>
-                <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                  <div className="flex justify-between font-medium">
-                    <span>Pendapatan Real (Kas Masuk):</span>
-                    <span className="text-slate-700">Rp {data.harian.actualRevenue.toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="flex justify-between text-red-500">
-                    <span>HPP Produk Terjual (Modal Barang):</span>
-                    <span>-Rp {(data.harian.actualRevenue - data.harian.salary - data.harian.actualGrossProfit).toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="flex justify-between text-red-500">
-                    <span>Biaya Gaji (Harian & Borongan):</span>
-                    <span>-Rp {data.harian.salary.toLocaleString('id-ID')}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-md border shadow-sm w-max">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-slate-700">Mulai:</label>
+              <input 
+                type="date" 
+                value={startDate} 
+                onChange={(e) => setStartDate(e.target.value)} 
+                className="border rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+            <span className="text-slate-400 hidden sm:inline">-</span>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-slate-700">Sampai:</label>
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => setEndDate(e.target.value)} 
+                className="border rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="col-span-4 lg:col-span-4 hover:shadow-md transition-all">
-              <CardHeader>
-                <CardTitle>Tren 7 Hari Terakhir</CardTitle>
-                <CardDescription>Perbandingan Profit Estimasi dan Profit Asli Harian.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={harianChartConfig} className="h-[300px] w-full">
-                  <AreaChart data={data.trendHarian} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorEst" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-estimatedGross)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="var(--color-estimatedGross)" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorAct" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-actualGross)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="var(--color-actualGross)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} className="text-xs text-muted-foreground" />
-                    <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                    <Area 
-                      type="monotone" 
-                      dataKey="estimatedGross" 
-                      name="Profit Estimasi"
-                      stroke="var(--color-estimatedGross)" 
-                      fillOpacity={1} 
-                      fill="url(#colorEst)" 
-                      strokeWidth={2}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="actualGross"
-                      name="Gross Profit Asli"
-                      stroke="var(--color-actualGross)" 
-                      fillOpacity={1} 
-                      fill="url(#colorAct)" 
-                      strokeWidth={2}
-                    />
-                  </AreaChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-            
-            <Card className="col-span-3 lg:col-span-3 hover:shadow-md transition-all">
-              <CardHeader>
-                <CardTitle>Penjualan Terakhir</CardTitle>
-                <CardDescription>5 Transaksi terbaru yang tercatat.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {data.recentTransactions.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Belum ada transaksi penjualan.
+          {harianLoading ? (
+            <div className="flex items-center justify-center py-12 bg-white rounded-md border shadow-sm">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground text-sm">Memuat Data Kas...</span>
+            </div>
+          ) : harianData ? (
+            <>
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card className="hover:shadow-md transition-all border-l-4 border-l-emerald-500">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Pemasukan Kas</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-emerald-600">
+                      Rp {harianData.pemasukan.toLocaleString('id-ID')}
                     </div>
-                  ) : (
-                    data.recentTransactions.map((trx: any) => (
-                      <div key={trx.id} className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Package className="h-4 w-4 text-primary" />
-                            <p className="text-sm font-medium leading-none">{trx.items} Item Terjual</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-md transition-all border-l-4 border-l-rose-500">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Pengeluaran Kas</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-rose-500 rotate-180" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-rose-600">
+                      Rp {harianData.pengeluaran.toLocaleString('id-ID')}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className={`hover:shadow-md transition-all border-l-4 ${harianData.selisih >= 0 ? 'border-l-blue-500' : 'border-l-amber-500'}`}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Laba / Selisih Kas</CardTitle>
+                    <DollarSign className={`h-4 w-4 ${harianData.selisih >= 0 ? 'text-blue-500' : 'text-amber-500'}`} />
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`text-2xl font-bold ${harianData.selisih >= 0 ? 'text-blue-600' : 'text-amber-600'}`}>
+                      Rp {harianData.selisih.toLocaleString('id-ID')}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Tambahan Baris Kartu Metrik Produksi & Penjualan */}
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card className="hover:shadow-md transition-all">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-600">Total Kue Diproduksi</CardTitle>
+                    <Layers className="h-4 w-4 text-slate-400" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-slate-800">
+                      {harianData.totalProduksi.toLocaleString('id-ID')} <span className="text-sm font-normal text-slate-500">pcs</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-md transition-all">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-600">Total Transaksi (Nota)</CardTitle>
+                    <Package className="h-4 w-4 text-slate-400" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-slate-800">
+                      {harianData.totalTransaksi.toLocaleString('id-ID')} <span className="text-sm font-normal text-slate-500">trx</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-md transition-all">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-600">Rata-rata Transaksi</CardTitle>
+                    <Users className="h-4 w-4 text-slate-400" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-slate-800">
+                      Rp {harianData.avgTransaksi.toLocaleString('id-ID')} <span className="text-sm font-normal text-slate-500">/trx</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                <Card className="col-span-4 lg:col-span-4 hover:shadow-md transition-all">
+                  <CardHeader>
+                    <CardTitle>Tren Pemasukan & Pengeluaran</CardTitle>
+                    <CardDescription>Perbandingan arus kas masuk dan keluar pada rentang tanggal terpilih.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={harianChartConfig} className="h-[300px] w-full">
+                      <AreaChart data={harianData.trend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorPem" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="var(--color-pemasukan)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="var(--color-pemasukan)" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="colorPeng" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="var(--color-pengeluaran)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="var(--color-pengeluaran)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} className="text-xs text-muted-foreground" />
+                        <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+                        <Area 
+                          type="monotone" 
+                          dataKey="pemasukan" 
+                          name="Pemasukan"
+                          stroke="var(--color-pemasukan)" 
+                          fillOpacity={1} 
+                          fill="url(#colorPem)" 
+                          strokeWidth={2}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="pengeluaran"
+                          name="Pengeluaran"
+                          stroke="var(--color-pengeluaran)" 
+                          fillOpacity={1} 
+                          fill="url(#colorPeng)" 
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+                
+                <Card className="col-span-3 lg:col-span-3 hover:shadow-md transition-all">
+                  <CardHeader>
+                    <CardTitle>Top Produk & Transaksi</CardTitle>
+                    <CardDescription>Produk terlaris dan transaksi terbaru pada tanggal terpilih.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Tabs defaultValue="top">
+                      <TabsList className="w-full mb-4">
+                        <TabsTrigger value="top" className="flex-1">Top Produk</TabsTrigger>
+                        <TabsTrigger value="recent" className="flex-1">Trx Terbaru</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="top" className="space-y-4 outline-none">
+                        {harianData.topProducts.length === 0 ? (
+                          <div className="text-center py-6 text-muted-foreground">
+                            Belum ada penjualan produk.
                           </div>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="h-3 w-3" /> {trx.date}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-emerald-600">
-                            + Rp {trx.amount.toLocaleString('id-ID')}
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                        ) : (
+                          harianData.topProducts.map((p: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                                  #{i + 1}
+                                </div>
+                                <span className="font-medium text-slate-700">{p.nama}</span>
+                              </div>
+                              <span className="font-bold text-primary">{p.jumlah} pcs</span>
+                            </div>
+                          ))
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="recent" className="space-y-4 outline-none">
+                        {harianData.recentTransactions.length === 0 ? (
+                          <div className="text-center py-6 text-muted-foreground">
+                            Belum ada transaksi.
+                          </div>
+                        ) : (
+                          harianData.recentTransactions.map((trx: any) => (
+                            <div key={trx.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <Package className="h-4 w-4 text-primary" />
+                                  <p className="text-sm font-medium leading-none">{trx.items} Item</p>
+                                </div>
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Clock className="h-3 w-3" /> {trx.date}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-emerald-600">
+                                  + Rp {trx.amount.toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          ) : null}
         </TabsContent>
 
         {/* ======================= TAB BULANAN ======================= */}

@@ -108,7 +108,25 @@ export function Step3Packaging() {
               packaging.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.nama}</TableCell>
-                  <TableCell className="text-right">{item.jumlah} pcs</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Input 
+                        type="number" 
+                        min="1"
+                        value={item.jumlah} 
+                        onChange={(e) => {
+                          const newJumlah = parseInt(e.target.value) || 0;
+                          setPackaging(packaging.map((p: any) => 
+                            p.id === item.id 
+                            ? { ...p, jumlah: newJumlah, subtotal: newJumlah * p.harga_satuan } 
+                            : p
+                          ));
+                        }}
+                        className="w-24 text-right"
+                      />
+                      <span className="text-muted-foreground font-medium text-sm w-8 text-left">pcs</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">Rp {item.harga_satuan.toLocaleString('id-ID')}</TableCell>
                   <TableCell className="text-right font-medium">Rp {item.subtotal.toLocaleString('id-ID')}</TableCell>
                   <TableCell>

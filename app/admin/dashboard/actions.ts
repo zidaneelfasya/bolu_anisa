@@ -259,3 +259,121 @@ export async function getDashboardMetrics() {
     recentTransactions
   };
 }
+
+export async function getHarianMetrics(startDate: string, endDate: string) {
+  const supabase = await createClient();
+
+  const [cashFlowRes, produksiRes, penjualanRes, produkRes] = await Promise.all([
+    supabase
+      .from("cash_flow")
+      .select("tanggal, jenis, nominal")
+      .gte("tanggal", startDate)
+      .lte("tanggal", endDate)
+      .is("deleted_at", null),
+    supabase
+      .from("produksi")
+      .select("id, tanggal_produksi, status, produksi_hasil(jumlah)")
+      .gte("tanggal_produksi", startDate)
+      .lte("tanggal_produksi", endDate)
+      .eq("status", "Selesai")
+      .is("deleted_at", null),
+    supabase
+      .from("penjualan")
+      .select("id, tanggal, total, created_at, penjualan_detail(jumlah, produk_id)")
+      .gte("tanggal", startDate)
+      .lte("tanggal", endDate)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    supabase.from("produk").select("id, nama").is("deleted_at", null)
+  ]);
+
+  const cashFlowData = cashFlowRes.data || [];
+  const produksiData = produksiRes.data || [];
+  const penjualanData = penjualanRes.data || [];
+  const produkData = produkRes.data || [];
+
+  const productMap = produkData.reduce((acc: any, p: any) => {
+    acc[p.id] = p.nama;
+    return acc;
+  }, {});
+
+  // 1. Pemasukan & Pengeluaran Kas
+  const pemasukan = cashFlowData.filter(f => f.jenis === "Pemasukan").reduce((sum, f) => sum + Number(f.nominal), 0);
+  const pengeluaran = cashFlowData.filter(f => f.jenis === "Pengeluaran").reduce((sum, f) => sum + Number(f.nominal), 0);
+  const selisih = pemasukan - pengeluaran;
+
+  // 2. Trend Kas Harian
+  const trend = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const dStr = `${yyyy}-${mm}-${dd}`;
+    const displayStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+
+    const dayFlows = cashFlowData.filter(f => f.tanggal === dStr);
+    const dayIn = dayFlows.filter(f => f.jenis === "Pemasukan").reduce((sum, f) => sum + Number(f.nominal), 0);
+    const dayOut = dayFlows.filter(f => f.jenis === "Pengeluaran").reduce((sum, f) => sum + Number(f.nominal), 0);
+    
+    trend.push({
+      date: displayStr,
+      pemasukan: dayIn,
+      pengeluaran: dayOut
+    });
+  }
+
+  // 3. Total Produksi
+  let totalProduksi = 0;
+  produksiData.forEach(p => {
+    p.produksi_hasil?.forEach((h: any) => {
+      totalProduksi += Number(h.jumlah);
+    });
+  });
+
+  // 4. Top Products Terjual
+  const productSalesMap: Record<string, number> = {};
+  penjualanData.forEach(p => {
+    p.penjualan_detail?.forEach((d: any) => {
+      const pName = productMap[d.produk_id] || "Unknown";
+      productSalesMap[pName] = (productSalesMap[pName] || 0) + Number(d.jumlah);
+    });
+  });
+
+  const topProducts = Object.entries(productSalesMap)
+    .map(([nama, jumlah]) => ({ nama, jumlah }))
+    .sort((a, b) => b.jumlah - a.jumlah)
+    .slice(0, 5); // Ambil 5 teratas
+
+  // 5. Recent Transactions Khusus Rentang Tanggal Ini
+  const recentTransactions = penjualanData.slice(0, 5).map(trx => {
+    const itemsCount = trx.penjualan_detail?.reduce((sum: number, detail: any) => sum + Number(detail.jumlah), 0) || 0;
+    return {
+      id: trx.id,
+      date: new Date(trx.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
+      amount: Number(trx.total),
+      items: itemsCount
+    };
+  });
+
+  // 6. Transaksi & Rata-rata
+  const totalTransaksi = penjualanData.length;
+  // Use actual cash revenue for average, or total transaction amount.
+  // Actually total transaction amount is better because cashflow Pemasukan might include other things.
+  const totalPenjualanNominal = penjualanData.reduce((sum, p) => sum + Number(p.total), 0);
+  const avgTransaksi = totalTransaksi > 0 ? (totalPenjualanNominal / totalTransaksi) : 0;
+
+  return {
+    pemasukan,
+    pengeluaran,
+    selisih,
+    trend,
+    totalProduksi,
+    topProducts,
+    recentTransactions,
+    totalTransaksi,
+    avgTransaksi
+  };
+}

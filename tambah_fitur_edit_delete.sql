@@ -40,9 +40,6 @@ BEGIN
     FOR v_hasil IN SELECT * FROM produksi_hasil WHERE produksi_id = p_produksi_id LOOP
         SELECT stok INTO v_stok_sekarang FROM produk WHERE id = v_hasil.produk_id;
         
-        IF v_stok_sekarang < v_hasil.jumlah THEN
-            RAISE EXCEPTION 'Stok produk jadi (ID: %) saat ini lebih kecil dari jumlah yang akan dibatalkan. Mungkin sudah terjual?', v_hasil.produk_id;
-        END IF;
 
         UPDATE produk SET stok = stok - v_hasil.jumlah WHERE id = v_hasil.produk_id;
 

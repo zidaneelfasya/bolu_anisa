@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2 } from "lucide-react";
 
@@ -56,18 +57,15 @@ export function Step4Hasil() {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-slate-50 p-4 rounded-lg border">
         <div className="space-y-2 md:col-span-4">
           <Label>Pilih Produk</Label>
-          <Select value={selectedProduk} onValueChange={setSelectedProduk}>
-            <SelectTrigger>
-              <SelectValue placeholder="-- Pilih Produk --" />
-            </SelectTrigger>
-            <SelectContent>
-              {masterData.produk.map((p: any) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.nama}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            value={selectedProduk}
+            onValueChange={setSelectedProduk}
+            options={masterData.produk.map((p: any) => ({
+              label: p.nama,
+              value: p.id
+            }))}
+            placeholder="-- Pilih Produk --"
+          />
         </div>
 
         <div className="space-y-2 md:col-span-3">
@@ -119,7 +117,21 @@ export function Step4Hasil() {
               hasil.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.nama}</TableCell>
-                  <TableCell className="text-right font-medium">{item.jumlah} Pcs</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        value={item.jumlah} 
+                        onChange={(e) => {
+                          const newJumlah = parseInt(e.target.value) || 0;
+                          setHasil(hasil.map((h: any) => h.id === item.id ? { ...h, jumlah: newJumlah } : h));
+                        }}
+                        className="w-24 text-right"
+                      />
+                      <span className="text-muted-foreground font-medium text-sm">Pcs</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-muted-foreground text-sm">{item.catatan || "-"}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" onClick={() => handleRemove(item.id)} className="text-destructive hover:bg-destructive/10">

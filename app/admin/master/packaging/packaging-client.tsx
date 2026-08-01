@@ -8,13 +8,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { addPackaging, deletePackaging } from "./actions";
+import { addPackaging, editPackaging, deletePackaging } from "./actions";
 import { toast } from "sonner";
 
 export function PackagingClient({ initialData }: { initialData: any[] }) {
   const [data, setData] = useState(initialData);
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredData = data.filter(item => 
@@ -39,6 +41,32 @@ export function PackagingClient({ initialData }: { initialData: any[] }) {
       // Data will refresh from server automatically but we wait for revalidation
       window.location.reload(); 
     }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    setIsSubmitting(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const result = await editPackaging(editingItem.id, formData);
+    
+    setIsSubmitting(false);
+    
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Packaging berhasil diupdate");
+      setIsEditDialogOpen(false);
+      setEditingItem(null);
+      // Data will refresh from server automatically but we wait for revalidation
+      window.location.reload(); 
+    }
+  };
+
+  const openEditDialog = (item: any) => {
+    setEditingItem(item);
+    setIsEditDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -109,6 +137,55 @@ export function PackagingClient({ initialData }: { initialData: any[] }) {
             </form>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+          setIsEditDialogOpen(open);
+          if (!open) setEditingItem(null);
+        }}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Edit Packaging</DialogTitle>
+            </DialogHeader>
+            {editingItem && (
+              <form onSubmit={handleEditSubmit}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-nama" className="text-right">Nama</Label>
+                    <Input id="edit-nama" name="nama" defaultValue={editingItem.nama} required className="col-span-3" placeholder="Contoh: Box Kecil" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-jenis" className="text-right">Jenis</Label>
+                    <Input id="edit-jenis" name="jenis" defaultValue={editingItem.jenis || ""} className="col-span-3" placeholder="Contoh: Karton, Plastik" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-harga_per_pcs" className="text-right">Harga /Pcs</Label>
+                    <Input id="edit-harga_per_pcs" name="harga_per_pcs" type="number" defaultValue={editingItem.harga_per_pcs} required className="col-span-3" placeholder="0" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-stok" className="text-right">Stok Saat Ini</Label>
+                    <Input id="edit-stok" name="stok" type="number" defaultValue={editingItem.stok} required className="col-span-3" placeholder="0" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-minimum_stok" className="text-right">Min. Stok</Label>
+                    <Input id="edit-minimum_stok" name="minimum_stok" type="number" defaultValue={editingItem.minimum_stok} className="col-span-3" placeholder="0" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-keterangan" className="text-right">Keterangan</Label>
+                    <Textarea id="edit-keterangan" name="keterangan" defaultValue={editingItem.keterangan || ""} className="col-span-3" placeholder="Catatan tambahan (opsional)" />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button type="button" variant="outline" onClick={() => { setIsEditDialogOpen(false); setEditingItem(null); }}>
+                    Batal
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="flex items-center gap-2 max-w-sm">
@@ -156,7 +233,12 @@ export function PackagingClient({ initialData }: { initialData: any[] }) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:text-blue-800 hover:bg-blue-50">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                        onClick={() => openEditDialog(item)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 

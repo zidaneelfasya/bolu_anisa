@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trash2, ShoppingCart, ArrowLeft, Plus, Info } from "lucide-react";
 import Link from "next/link";
@@ -331,16 +332,15 @@ export function CreatePembelianClient({ masterBahan, masterPackaging, masterProd
                 produkList.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <Select value={item.id} onValueChange={(val) => updateProdukRow(index, "id", val)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih Produk..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {masterProduk.map(p => (
-                            <SelectItem key={p.id} value={p.id}>{p.nama}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Combobox
+                        value={item.id}
+                        onValueChange={(val) => updateProdukRow(index, "id", val)}
+                        options={masterProduk.map(p => ({
+                          label: p.nama,
+                          value: p.id
+                        }))}
+                        placeholder="Pilih Produk..."
+                      />
                     </TableCell>
                     <TableCell>
                       <Input type="number" min="0" value={item.jumlah} onChange={(e) => updateProdukRow(index, "jumlah", e.target.value)} />

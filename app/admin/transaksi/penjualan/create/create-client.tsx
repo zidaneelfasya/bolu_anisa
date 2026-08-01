@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trash2, Store, ArrowLeft, Plus } from "lucide-react";
 import Link from "next/link";
@@ -152,18 +153,15 @@ export function CreatePenjualanClient({ masterProduk }: Props) {
                 produkList.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <Select value={item.id} onValueChange={(val) => updateProdukRow(index, "id", val)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih Kue/Bolu..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {masterProduk.map(p => (
-                            <SelectItem key={p.id} value={p.id}>
-                              {p.nama} (Stok: {p.stok})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Combobox
+                        value={item.id}
+                        onValueChange={(val) => updateProdukRow(index, "id", val)}
+                        options={masterProduk.map(p => ({
+                          label: `${p.nama} (Stok: ${p.stok})`,
+                          value: p.id
+                        }))}
+                        placeholder="Pilih Kue/Bolu..."
+                      />
                     </TableCell>
                     <TableCell>
                       <Input 

@@ -108,13 +108,23 @@ export function WizardContainer({ onSubmit, isEdit = false }: { onSubmit?: (payl
 
         {/* Navigation Buttons */}
         <div className="flex justify-between mt-8 pt-4 border-t">
-          <Button 
-            variant="outline" 
-            onClick={handlePrev}
-            disabled={currentStep === 1 || isSubmitting}
-          >
-            Kembali
-          </Button>
+          {currentStep === 1 ? (
+            <Button 
+              variant="outline" 
+              onClick={() => router.push("/admin/transaksi/produksi")}
+              disabled={isSubmitting}
+            >
+              Batal
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              onClick={handlePrev}
+              disabled={isSubmitting}
+            >
+              Kembali
+            </Button>
+          )}
           
           {currentStep < 5 ? (
             <Button onClick={handleNext} className="bg-primary hover:bg-primary/90" disabled={isSubmitting}>
