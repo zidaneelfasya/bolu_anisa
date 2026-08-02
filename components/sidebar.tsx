@@ -96,7 +96,7 @@ export function Sidebar({ email = "user@example.com", role = "kasir" }: { email?
   const roleInitial = role === 'admin' ? 'AD' : 'KS';
 
   return (
-    <div className="flex h-full w-64 flex-col bg-card border-r">
+    <div className="flex h-full w-64 flex-col bg-card border-r print:hidden">
       <div className="flex h-14 items-center border-b px-4 shrink-0">
         <Link href={role === 'admin' ? "/admin" : "/kasir"} className="text-xl font-bold text-primary flex items-center gap-2 hover:opacity-90 transition-opacity">
           <Image 

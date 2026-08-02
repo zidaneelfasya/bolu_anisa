@@ -15,10 +15,10 @@ export default async function DashboardLayout({
   const role = user?.user_metadata?.role || 'kasir';
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen print:h-auto bg-background overflow-hidden print:overflow-visible">
       <Sidebar email={email} role={role} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-14 border-b flex items-center justify-between px-4 lg:px-6 bg-card shrink-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden print:overflow-visible">
+        <header className="h-14 border-b flex items-center justify-between px-4 lg:px-6 bg-card shrink-0 print:hidden">
           <div className="flex items-center gap-4">
             <h1 className="text-sm font-semibold hidden lg:block">Dashboard Admin</h1>
           </div>
@@ -26,7 +26,7 @@ export default async function DashboardLayout({
             <ThemeToggle />
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-slate-50/50 dark:bg-slate-900/50">
+        <main className="flex-1 overflow-auto print:overflow-visible p-4 md:p-6 lg:p-8 bg-slate-50/50 dark:bg-slate-900/50 print:bg-white print:p-0">
           {children}
         </main>
       </div>

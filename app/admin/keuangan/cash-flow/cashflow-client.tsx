@@ -1,18 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { Plus, Search, TrendingUp, TrendingDown, Wallet, CalendarDays } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { addManualCashFlow } from "./actions";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { id } from "date-fns/locale";
 
 type Props = {
@@ -23,44 +24,17 @@ export function CashFlowClient({ data }: Props) {
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const currentDateISO = new Date().toISOString();
+  // State Bulan untuk Tab Bulanan (Format: YYYY-MM)
+  const [selectedMonthStr, setSelectedMonthStr] = useState(currentDateISO.slice(0, 7));
 
   // Form State
-  const [tanggal, setTanggal] = useState(new Date().toISOString().split("T")[0]);
+  const [tanggal, setTanggal] = useState(currentDateISO.split("T")[0]);
   const [kategori, setKategori] = useState("");
   const [jenis, setJenis] = useState("");
   const [nominalStr, setNominalStr] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
-
-  const filteredData = data.filter(item => 
-    item.kategori?.toLowerCase().includes(search.toLowerCase()) ||
-    item.deskripsi?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // Kalkulasi Dashboard (Bulan Berjalan)
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
-
-  let totalPemasukanBulanIni = 0;
-  let totalPengeluaranBulanIni = 0;
-  
-  // Total Saldo (All time)
-  let totalSaldo = 0;
-
-  data.forEach(item => {
-    const itemDate = new Date(item.tanggal);
-    const nominal = Number(item.nominal) || 0;
-
-    // Kalkulasi all time untuk saldo
-    if (item.jenis === "Pemasukan") totalSaldo += nominal;
-    else if (item.jenis === "Pengeluaran") totalSaldo -= nominal;
-
-    // Kalkulasi bulan ini
-    if (itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear) {
-      if (item.jenis === "Pemasukan") totalPemasukanBulanIni += nominal;
-      else if (item.jenis === "Pengeluaran") totalPengeluaranBulanIni += nominal;
-    }
-  });
 
   const resetForm = () => {
     setTanggal(new Date().toISOString().split("T")[0]);
@@ -98,6 +72,107 @@ export function CashFlowClient({ data }: Props) {
       window.location.reload();
     }
   };
+
+  // --- Kalkulasi Data ---
+  
+  // Data Semua Waktu
+  const filteredDataSemua = useMemo(() => {
+    return data.filter(item => 
+      item.kategori?.toLowerCase().includes(search.toLowerCase()) ||
+      item.deskripsi?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [data, search]);
+
+  let totalSaldoSemua = 0;
+  let totalPemasukanSemua = 0;
+  let totalPengeluaranSemua = 0;
+
+  data.forEach(item => {
+    const nominal = Number(item.nominal) || 0;
+    if (item.jenis === "Pemasukan") {
+      totalSaldoSemua += nominal;
+      totalPemasukanSemua += nominal;
+    } else if (item.jenis === "Pengeluaran") {
+      totalSaldoSemua -= nominal;
+      totalPengeluaranSemua += nominal;
+    }
+  });
+
+  // Data Bulan Terpilih
+  const [selYear, selMonth] = selectedMonthStr.split("-");
+  const selectedMonthNum = parseInt(selMonth, 10) - 1; // 0-indexed
+  const selectedYearNum = parseInt(selYear, 10);
+
+  const dataBulanIni = useMemo(() => {
+    return data.filter(item => {
+      const itemDate = new Date(item.tanggal);
+      return itemDate.getMonth() === selectedMonthNum && itemDate.getFullYear() === selectedYearNum;
+    });
+  }, [data, selectedMonthNum, selectedYearNum]);
+
+  const filteredDataBulanan = useMemo(() => {
+    return dataBulanIni.filter(item => 
+      item.kategori?.toLowerCase().includes(search.toLowerCase()) ||
+      item.deskripsi?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [dataBulanIni, search]);
+
+  let totalPemasukanBulanIni = 0;
+  let totalPengeluaranBulanIni = 0;
+
+  dataBulanIni.forEach(item => {
+    const nominal = Number(item.nominal) || 0;
+    if (item.jenis === "Pemasukan") totalPemasukanBulanIni += nominal;
+    else if (item.jenis === "Pengeluaran") totalPengeluaranBulanIni += nominal;
+  });
+  
+  const saldoBulanIni = totalPemasukanBulanIni - totalPengeluaranBulanIni;
+
+  // Render Table Function
+  const renderTable = (tableData: any[]) => (
+    <div className="bg-white rounded-md border">
+      <Table>
+        <TableHeader className="bg-slate-50">
+          <TableRow>
+            <TableHead>Tanggal</TableHead>
+            <TableHead>Kategori</TableHead>
+            <TableHead>Deskripsi</TableHead>
+            <TableHead className="text-right">Pemasukan</TableHead>
+            <TableHead className="text-right">Pengeluaran</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {tableData.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                Belum ada catatan transaksi kas.
+              </TableCell>
+            </TableRow>
+          ) : (
+            tableData.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>
+                  {format(new Date(item.tanggal), "dd MMM yyyy", { locale: id })}
+                </TableCell>
+                <TableCell>
+                  <span className="font-medium text-slate-800">{item.kategori}</span>
+                </TableCell>
+                <TableCell className="text-muted-foreground text-sm max-w-[300px] truncate">
+                  {item.deskripsi || "-"}
+                </TableCell>
+                <TableCell className="text-right font-semibold text-green-600">
+                  {item.jenis === "Pemasukan" ? `Rp ${item.nominal.toLocaleString('id-ID')}` : "-"}
+                </TableCell>
+                <TableCell className="text-right font-semibold text-red-600">
+                  {item.jenis === "Pengeluaran" ? `Rp ${item.nominal.toLocaleString('id-ID')}` : "-"}
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -194,101 +269,136 @@ export function CashFlowClient({ data }: Props) {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-primary/5 border-primary/20">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Saldo Kas</CardTitle>
-            <Wallet className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">Rp {totalSaldo.toLocaleString('id-ID')}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Akumulasi seluruh waktu
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pemasukan Bulan Ini</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">Rp {totalPemasukanBulanIni.toLocaleString('id-ID')}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Periode {format(currentDate, "MMMM yyyy", { locale: id })}
-            </p>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="bulanan" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="bulanan">Bulanan</TabsTrigger>
+          <TabsTrigger value="semua">Semua Waktu</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pengeluaran Bulan Ini</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">Rp {totalPengeluaranBulanIni.toLocaleString('id-ID')}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Periode {format(currentDate, "MMMM yyyy", { locale: id })}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="bulanan" className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-muted-foreground" />
+              <Input 
+                type="month" 
+                value={selectedMonthStr} 
+                onChange={(e) => setSelectedMonthStr(e.target.value)}
+                className="w-auto"
+              />
+            </div>
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Cari transaksi..." 
+                className="pl-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
 
-      <div className="flex items-center gap-2 max-w-sm">
-        <div className="relative w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Cari transaksi..." 
-            className="pl-8"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card className="bg-primary/5 border-primary/20">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Saldo Bulan Ini</CardTitle>
+                <Wallet className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">Rp {saldoBulanIni.toLocaleString('id-ID')}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Pemasukan - Pengeluaran bulan ini
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Pemasukan Bulan Ini</CardTitle>
+                <TrendingUp className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">Rp {totalPemasukanBulanIni.toLocaleString('id-ID')}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Total dana masuk
+                </p>
+              </CardContent>
+            </Card>
 
-      <div className="bg-white rounded-md border">
-        <Table>
-          <TableHeader className="bg-slate-50">
-            <TableRow>
-              <TableHead>Tanggal</TableHead>
-              <TableHead>Kategori</TableHead>
-              <TableHead>Deskripsi</TableHead>
-              <TableHead className="text-right">Pemasukan</TableHead>
-              <TableHead className="text-right">Pengeluaran</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredData.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  Belum ada catatan transaksi kas.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredData.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    {format(new Date(item.tanggal), "dd MMM yyyy", { locale: id })}
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-medium text-slate-800">{item.kategori}</span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm max-w-[300px] truncate">
-                    {item.deskripsi || "-"}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold text-green-600">
-                    {item.jenis === "Pemasukan" ? `Rp ${item.nominal.toLocaleString('id-ID')}` : "-"}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold text-red-600">
-                    {item.jenis === "Pengeluaran" ? `Rp ${item.nominal.toLocaleString('id-ID')}` : "-"}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Pengeluaran Bulan Ini</CardTitle>
+                <TrendingDown className="h-4 w-4 text-red-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">Rp {totalPengeluaranBulanIni.toLocaleString('id-ID')}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Total dana keluar
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {renderTable(filteredDataBulanan)}
+        </TabsContent>
+
+        <TabsContent value="semua" className="space-y-6">
+          <div className="flex justify-end">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Cari transaksi..." 
+                className="pl-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card className="bg-primary/5 border-primary/20">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Saldo Kas</CardTitle>
+                <Wallet className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">Rp {totalSaldoSemua.toLocaleString('id-ID')}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Akumulasi seluruh waktu
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Pemasukan</CardTitle>
+                <TrendingUp className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">Rp {totalPemasukanSemua.toLocaleString('id-ID')}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Keseluruhan waktu
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Pengeluaran</CardTitle>
+                <TrendingDown className="h-4 w-4 text-red-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">Rp {totalPengeluaranSemua.toLocaleString('id-ID')}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Keseluruhan waktu
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {renderTable(filteredDataSemua)}
+        </TabsContent>
+      </Tabs>
+
     </div>
   );
 }
