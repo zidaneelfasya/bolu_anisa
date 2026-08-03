@@ -28,8 +28,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
-export function Sidebar({ email = "user@example.com", role = "kasir" }: { email?: string, role?: string }) {
+export function Sidebar({ 
+  email = "user@example.com", 
+  role = "kasir",
+  isCollapsed = false,
+  onLinkClick
+}: { 
+  email?: string;
+  role?: string;
+  isCollapsed?: boolean;
+  onLinkClick?: () => void;
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -96,17 +107,17 @@ export function Sidebar({ email = "user@example.com", role = "kasir" }: { email?
   const roleInitial = role === 'admin' ? 'AD' : 'KS';
 
   return (
-    <div className="flex h-full w-64 flex-col bg-card border-r print:hidden">
-      <div className="flex h-14 items-center border-b px-4 shrink-0">
-        <Link href={role === 'admin' ? "/admin" : "/kasir"} className="text-xl font-bold text-primary flex items-center gap-2 hover:opacity-90 transition-opacity">
+    <div className="flex h-full w-full flex-col bg-card print:hidden">
+      <div className={cn("flex h-14 items-center border-b shrink-0 overflow-hidden", isCollapsed ? "justify-center px-0" : "px-4")}>
+        <Link href={role === 'admin' ? "/admin" : "/kasir"} className="text-xl font-bold text-primary flex items-center gap-2 hover:opacity-90 transition-opacity overflow-hidden" onClick={onLinkClick}>
           <Image 
             src="/image/logo_bolu_anisa.svg" 
             alt="Logo Bolu Anisa" 
             width={32} 
             height={32} 
-            className="h-8 w-8 object-contain" 
+            className="h-8 w-8 object-contain shrink-0" 
           />
-          Bolu Anisa
+          {!isCollapsed && <span className="truncate">Bolu Anisa</span>}
         </Link>
       </div>
       
@@ -114,7 +125,7 @@ export function Sidebar({ email = "user@example.com", role = "kasir" }: { email?
         <nav className="grid items-start px-2 text-sm font-medium gap-1">
           {navGroups.map((group, groupIndex) => (
             <div key={groupIndex} className={groupIndex > 0 ? "mt-4" : "mt-0"}>
-              {group.title && (
+              {group.title && !isCollapsed && (
                 <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {group.title}
                 </div>
@@ -130,14 +141,18 @@ export function Sidebar({ email = "user@example.com", role = "kasir" }: { email?
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                      onClick={onLinkClick}
+                      title={isCollapsed ? item.label : undefined}
+                      className={cn(
+                        "flex items-center rounded-lg transition-all",
+                        isCollapsed ? "justify-center p-2 w-10 mx-auto" : "gap-3 px-3 py-2",
                         isActive 
                           ? "bg-muted text-foreground" 
                           : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
+                      )}
                     >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      {!isCollapsed && <span className="truncate">{item.label}</span>}
                     </Link>
                   );
                 })}
@@ -147,19 +162,23 @@ export function Sidebar({ email = "user@example.com", role = "kasir" }: { email?
         </nav>
       </div>
 
-      <div className="p-4 border-t mt-auto shrink-0">
+      <div className={cn("p-4 border-t mt-auto shrink-0 flex", isCollapsed ? "justify-center" : "")}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center w-full gap-3 p-2 rounded-md hover:bg-muted transition-colors text-left outline-none">
-              <Avatar className="h-9 w-9">
+            <button className={cn("flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors text-left outline-none", isCollapsed ? "justify-center w-auto" : "w-full")}>
+              <Avatar className="h-9 w-9 shrink-0">
                 <AvatarImage src="" alt={roleDisplay} />
                 <AvatarFallback className="bg-primary/10 text-primary">{roleInitial}</AvatarFallback>
               </Avatar>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium leading-none truncate">{roleDisplay}</p>
-                <p className="text-xs text-muted-foreground truncate mt-1">{email}</p>
-              </div>
-              <MoreVertical className="h-4 w-4 text-muted-foreground" />
+              {!isCollapsed && (
+                <>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="text-sm font-medium leading-none truncate">{roleDisplay}</p>
+                    <p className="text-xs text-muted-foreground truncate mt-1">{email}</p>
+                  </div>
+                  <MoreVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                </>
+              )}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" alignOffset={-10}>

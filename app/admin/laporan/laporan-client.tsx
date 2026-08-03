@@ -276,7 +276,7 @@ export function LaporanClient() {
             Laporan Harian / Periode Cashflow (Otomatis direkap)
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-md border">
+        <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md border">
           <div className="flex flex-col">
             <span className="text-xs text-muted-foreground mb-1">Mulai Tanggal</span>
             <Input 
@@ -296,7 +296,7 @@ export function LaporanClient() {
             />
           </div>
           <div className="flex flex-col self-end ml-2">
-            <Button onClick={handlePrint} variant="outline" className="h-8 gap-2 bg-white" disabled={isLoading}>
+            <Button onClick={handlePrint} variant="outline" className="h-8 gap-2 bg-card" disabled={isLoading}>
               <Printer className="w-4 h-4" /> Cetak
             </Button>
           </div>
@@ -306,7 +306,7 @@ export function LaporanClient() {
       <Card className="print:shadow-none print:border-none relative min-h-[500px]">
         {/* Loading Overlay */}
         {isLoading && (
-          <div className="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center rounded-md">
+          <div className="absolute inset-0 bg-card/80 z-10 flex flex-col items-center justify-center rounded-md">
             <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
             <p className="text-sm font-medium text-slate-600 animate-pulse">{loadingState}</p>
           </div>
@@ -381,7 +381,7 @@ export function LaporanClient() {
                     ))}
                   </>
                 )}
-                <TableRow className="bg-slate-50 print:bg-gray-100 print:border-black">
+                <TableRow className="bg-muted/50 print:bg-gray-100 print:border-black">
                   <TableCell colSpan={4} className="border print:border-black font-bold text-right uppercase">Total Pemasukan</TableCell>
                   <TableCell className="border print:border-black font-bold text-right text-green-700 print:text-black">
                     Rp {totalPemasukan.toLocaleString('id-ID')}
@@ -439,7 +439,7 @@ export function LaporanClient() {
                     ))}
                   </>
                 )}
-                <TableRow className="bg-slate-50 print:bg-gray-100 print:border-black">
+                <TableRow className="bg-muted/50 print:bg-gray-100 print:border-black">
                   <TableCell colSpan={4} className="border print:border-black font-bold text-right uppercase">Total Pengeluaran</TableCell>
                   <TableCell className="border print:border-black font-bold text-right text-red-700 print:text-black">
                     Rp {totalPengeluaran.toLocaleString('id-ID')}

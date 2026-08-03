@@ -152,7 +152,7 @@ export function CreatePembelianClient({ masterBahan, masterPackaging, masterProd
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-6 bg-white p-6 rounded-md border shadow-sm">
+      <div className="grid grid-cols-2 gap-6 bg-card p-6 rounded-md border shadow-sm">
         <div className="space-y-2">
           <Label>Tanggal Pembelian</Label>
           <Input 
@@ -171,8 +171,8 @@ export function CreatePembelianClient({ masterBahan, masterPackaging, masterProd
         </div>
       </div>
 
-      <div className="bg-white rounded-md border shadow-sm overflow-hidden">
-        <div className="bg-slate-50 p-4 border-b flex justify-between items-center">
+      <div className="bg-card rounded-md border shadow-sm overflow-hidden">
+        <div className="bg-muted/50 p-4 border-b flex justify-between items-center">
           <h3 className="font-semibold text-lg flex items-center">
             <ShoppingCart className="mr-2 h-5 w-5 text-primary" />
             Item Bahan Baku
@@ -236,7 +236,7 @@ export function CreatePembelianClient({ masterBahan, masterPackaging, masterProd
         </div>
       </div>
 
-      <div className="bg-white rounded-md border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-md border shadow-sm overflow-hidden">
         <div className="bg-orange-50 p-4 border-b flex justify-between items-center">
           <h3 className="font-semibold text-lg flex items-center text-orange-800">
             <ShoppingCart className="mr-2 h-5 w-5 text-orange-600" />
@@ -300,7 +300,7 @@ export function CreatePembelianClient({ masterBahan, masterPackaging, masterProd
           </Table>
         </div>
       </div>
-      <div className="bg-white rounded-md border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-md border shadow-sm overflow-hidden">
         <div className="bg-purple-50 p-4 border-b flex justify-between items-center">
           <h3 className="font-semibold text-lg flex items-center text-purple-800">
             <ShoppingCart className="mr-2 h-5 w-5 text-purple-600" />

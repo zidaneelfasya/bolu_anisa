@@ -77,7 +77,7 @@ export default function PenggunaClient({ initialData }: { initialData: any[] }) 
         <div className="rounded-md border">
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50/50">
+              <TableRow className="bg-muted/50/50">
                 <TableHead>Email Pengguna</TableHead>
                 <TableHead>Terdaftar Sejak</TableHead>
                 <TableHead>Status Email</TableHead>

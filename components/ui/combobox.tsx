@@ -41,7 +41,7 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between font-normal bg-white"
+          className="w-full justify-between font-normal bg-card"
         >
           <span className="truncate">
             {value

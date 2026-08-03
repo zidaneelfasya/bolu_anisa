@@ -96,9 +96,9 @@ export function RateBoronganClient({ initialData }: { initialData: { produksi: a
     const filtered = items.filter(i => i.nama.toLowerCase().includes(search.toLowerCase()));
 
     return (
-      <div className="bg-white rounded-md border mt-4">
+      <div className="bg-card rounded-md border mt-4">
         <Table>
-          <TableHeader className="bg-slate-50">
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead>Nama Pekerjaan {type}</TableHead>
               <TableHead>Rate {type === "Produksi" ? "(per Kg)" : "(per Pcs)"}</TableHead>

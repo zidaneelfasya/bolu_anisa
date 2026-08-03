@@ -54,7 +54,7 @@ export function Step4Hasil() {
         <p className="text-sm text-muted-foreground mt-1">Masukkan data jumlah kue yang berhasil diproduksi.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-slate-50 p-4 rounded-lg border">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-muted/50 p-4 rounded-lg border">
         <div className="space-y-2 md:col-span-4">
           <Label>Pilih Produk</Label>
           <Combobox

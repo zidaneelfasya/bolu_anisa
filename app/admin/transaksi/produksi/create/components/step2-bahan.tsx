@@ -54,7 +54,7 @@ export function Step2Bahan() {
         <p className="text-sm text-muted-foreground mt-1">Tambahkan semua bahan yang dipakai untuk produksi ini.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-slate-50 p-4 rounded-lg border">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-muted/50 p-4 rounded-lg border">
         <div className="space-y-2 md:col-span-2">
           <Label>Pilih Bahan Baku</Label>
           <Select value={selectedBahan} onValueChange={setSelectedBahan}>

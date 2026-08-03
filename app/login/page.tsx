@@ -1,7 +1,7 @@
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="p-8 bg-white border rounded-xl shadow-lg w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center bg-muted/50">
+      <div className="p-8 bg-card border rounded-xl shadow-lg w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center text-primary mb-6">Login Bolu Anisa</h1>
         <p className="text-center text-sm text-muted-foreground mb-4">Silakan login untuk mengakses sistem admin.</p>
         <div className="space-y-4">

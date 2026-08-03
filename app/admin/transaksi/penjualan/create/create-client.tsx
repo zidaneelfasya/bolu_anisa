@@ -101,7 +101,7 @@ export function CreatePenjualanClient({ masterProduk }: Props) {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-md border shadow-sm flex flex-col sm:flex-row gap-6">
+      <div className="bg-card p-6 rounded-md border shadow-sm flex flex-col sm:flex-row gap-6">
         <div className="w-full sm:max-w-xs space-y-2">
           <Label>Tanggal Transaksi</Label>
           <Input 
@@ -121,8 +121,8 @@ export function CreatePenjualanClient({ masterProduk }: Props) {
         </div>
       </div>
 
-      <div className="bg-white rounded-md border shadow-sm overflow-hidden">
-        <div className="bg-slate-50 p-4 border-b flex justify-between items-center">
+      <div className="bg-card rounded-md border shadow-sm overflow-hidden">
+        <div className="bg-muted/50 p-4 border-b flex justify-between items-center">
           <h3 className="font-semibold text-lg flex items-center">
             <Store className="mr-2 h-5 w-5 text-primary" />
             Keranjang Belanja
@@ -178,7 +178,7 @@ export function CreatePenjualanClient({ masterProduk }: Props) {
                         min="0" 
                         value={item.harga} 
                         onChange={(e) => updateProdukRow(index, "harga", e.target.value)} 
-                        className="bg-white font-medium"
+                        className="bg-card font-medium"
                       />
                     </TableCell>
                     <TableCell className="text-right font-bold text-slate-700">

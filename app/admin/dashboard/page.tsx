@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, Layers, Package, Users, TrendingUp, Clock, Loader2, ArrowUpRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { DollarSign, Layers, Package, Users, TrendingUp, Clock, Loader2, ArrowUpRight, CheckCircle2, AlertCircle, CalendarIcon } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Bar, BarChart, Tooltip } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
@@ -103,40 +103,38 @@ export default function DashboardPage() {
 
       <Tabs defaultValue="harian" className="space-y-6">
         <div className="flex justify-between items-center">
-          <TabsList className="bg-slate-100">
-            <TabsTrigger value="harian" className="data-[state=active]:bg-white data-[state=active]:text-primary">Harian</TabsTrigger>
-            <TabsTrigger value="bulanan" className="data-[state=active]:bg-white data-[state=active]:text-primary">Bulanan</TabsTrigger>
-            <TabsTrigger value="tahunan" className="data-[state=active]:bg-white data-[state=active]:text-primary">Tahunan</TabsTrigger>
+          <TabsList className="bg-muted">
+            <TabsTrigger value="harian" className="data-[state=active]:bg-background data-[state=active]:text-primary">Harian</TabsTrigger>
+            <TabsTrigger value="bulanan" className="data-[state=active]:bg-background data-[state=active]:text-primary">Bulanan</TabsTrigger>
+            <TabsTrigger value="tahunan" className="data-[state=active]:bg-background data-[state=active]:text-primary">Tahunan</TabsTrigger>
           </TabsList>
         </div>
 
         {/* ======================= TAB HARIAN ======================= */}
         <TabsContent value="harian" className="space-y-6 outline-none">
-          <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-md border shadow-sm w-max">
+          <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-4 rounded-md border shadow-sm w-max">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-slate-700">Mulai:</label>
-              <input 
-                type="date" 
-                value={startDate} 
-                onChange={(e) => setStartDate(e.target.value)} 
-                className="border rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
-              />
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Filter Tanggal:</span>
             </div>
-            <span className="text-slate-400 hidden sm:inline">-</span>
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-slate-700">Sampai:</label>
-              <input 
-                type="date" 
-                value={endDate} 
-                onChange={(e) => setEndDate(e.target.value)} 
-                className="border rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
+            <input 
+              type="date" 
+              value={startDate} 
+              onChange={(e) => setStartDate(e.target.value)} 
+              className="border rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50 bg-background text-foreground"
+            />
+            <span className="text-muted-foreground hidden sm:inline">-</span>
+            <input 
+              type="date" 
+              value={endDate} 
+              onChange={(e) => setEndDate(e.target.value)} 
+              className="border rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50 bg-background text-foreground"
+            />
           </div>
 
           {harianLoading ? (
-            <div className="flex items-center justify-center py-12 bg-white rounded-md border shadow-sm">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <div className="flex items-center justify-center py-12 bg-card rounded-md border shadow-sm">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               <span className="ml-2 text-muted-foreground text-sm">Memuat Data Kas...</span>
             </div>
           ) : harianData ? (
@@ -183,36 +181,36 @@ export default function DashboardPage() {
               <div className="grid gap-4 md:grid-cols-3">
                 <Card className="hover:shadow-md transition-all">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-600">Total Kue Diproduksi</CardTitle>
-                    <Layers className="h-4 w-4 text-slate-400" />
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total Kue Diproduksi</CardTitle>
+                    <Layers className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-slate-800">
-                      {harianData.totalProduksi.toLocaleString('id-ID')} <span className="text-sm font-normal text-slate-500">pcs</span>
+                    <div className="text-2xl font-bold text-foreground">
+                      {harianData.totalProduksi.toLocaleString('id-ID')} <span className="text-sm font-normal text-muted-foreground">pcs</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="hover:shadow-md transition-all">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-600">Total Transaksi (Nota)</CardTitle>
-                    <Package className="h-4 w-4 text-slate-400" />
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total Transaksi (Nota)</CardTitle>
+                    <Package className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-slate-800">
-                      {harianData.totalTransaksi.toLocaleString('id-ID')} <span className="text-sm font-normal text-slate-500">trx</span>
+                    <div className="text-2xl font-bold text-foreground">
+                      {harianData.totalTransaksi.toLocaleString('id-ID')} <span className="text-sm font-normal text-muted-foreground">trx</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="hover:shadow-md transition-all">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-600">Rata-rata Transaksi</CardTitle>
-                    <Users className="h-4 w-4 text-slate-400" />
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Rata-rata Transaksi</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-slate-800">
-                      Rp {harianData.avgTransaksi.toLocaleString('id-ID')} <span className="text-sm font-normal text-slate-500">/trx</span>
+                    <div className="text-2xl font-bold text-foreground">
+                      Rp {harianData.avgTransaksi.toLocaleString('id-ID')} <span className="text-sm font-normal text-muted-foreground">/trx</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -282,12 +280,12 @@ export default function DashboardPage() {
                           </div>
                         ) : (
                           harianData.topProducts.map((p: any, i: number) => (
-                            <div key={i} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <div key={i} className="flex items-center justify-between bg-muted/50 p-3 rounded-lg border border-border">
                               <div className="flex items-center gap-3">
                                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
                                   #{i + 1}
                                 </div>
-                                <span className="font-medium text-slate-700">{p.nama}</span>
+                                <span className="font-medium text-card-foreground">{p.nama}</span>
                               </div>
                               <span className="font-bold text-primary">{p.jumlah} pcs</span>
                             </div>
@@ -489,7 +487,7 @@ export default function DashboardPage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Object.entries(data.bulanan.rekapProduksi).map(([nama, jumlah]: any) => (
-                    <div key={nama} className="flex justify-between items-center p-4 border rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <div key={nama} className="flex justify-between items-center p-4 border rounded-lg bg-muted/50 hover:bg-slate-100 transition-colors">
                       <div className="font-semibold text-slate-700">{nama}</div>
                       <div className="text-xl font-bold text-primary">{jumlah} pcs</div>
                     </div>

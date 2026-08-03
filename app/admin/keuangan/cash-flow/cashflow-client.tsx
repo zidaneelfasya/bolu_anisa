@@ -130,9 +130,9 @@ export function CashFlowClient({ data }: Props) {
 
   // Render Table Function
   const renderTable = (tableData: any[]) => (
-    <div className="bg-white rounded-md border">
+    <div className="bg-card rounded-md border">
       <Table>
-        <TableHeader className="bg-slate-50">
+        <TableHeader className="bg-muted/50">
           <TableRow>
             <TableHead>Tanggal</TableHead>
             <TableHead>Kategori</TableHead>

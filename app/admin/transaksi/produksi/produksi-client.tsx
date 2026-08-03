@@ -92,9 +92,9 @@ export function ProduksiClient({ data }: { data: any[] }) {
         </div>
       </div>
 
-      <div className="bg-white rounded-md border">
+      <div className="bg-card rounded-md border">
         <Table>
-          <TableHeader className="bg-slate-50">
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead>No. Produksi</TableHead>
               <TableHead>Tanggal</TableHead>

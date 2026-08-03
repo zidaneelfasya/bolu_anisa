@@ -200,9 +200,9 @@ export function PackagingClient({ initialData }: { initialData: any[] }) {
         </div>
       </div>
 
-      <div className="bg-white rounded-md border">
+      <div className="bg-card rounded-md border">
         <Table>
-          <TableHeader className="bg-slate-50">
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead>Nama Packaging</TableHead>
               <TableHead>Jenis</TableHead>

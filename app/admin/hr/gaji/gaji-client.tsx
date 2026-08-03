@@ -248,7 +248,7 @@ export function GajiClient({ initialData }: Props) {
               )}
 
               {selectedKarId && jenisGaji && (
-                <div className="p-4 bg-slate-50 border rounded-lg mt-4 space-y-4">
+                <div className="p-4 bg-muted/50 border rounded-lg mt-4 space-y-4">
                   <div className="font-semibold text-slate-700 border-b pb-2 mb-2">
                     Detail {jenisGaji}
                   </div>
@@ -356,9 +356,9 @@ export function GajiClient({ initialData }: Props) {
         </div>
       </div>
 
-      <div className="bg-white rounded-md border">
+      <div className="bg-card rounded-md border">
         <Table>
-          <TableHeader className="bg-slate-50">
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead>Tanggal</TableHead>
               <TableHead>Karyawan</TableHead>

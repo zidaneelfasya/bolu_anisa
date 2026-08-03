@@ -239,9 +239,9 @@ export function KalkulatorHppModal({ isOpen, setIsOpen, produk }: KalkulatorHppM
               
               <div className="space-y-2">
                 {ingredients.map((item, index) => (
-                  <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 items-center bg-slate-50 p-2 rounded-md border">
+                  <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 items-center bg-muted/50 p-2 rounded-md border">
                     <Select value={item.bahan_id} onValueChange={(val) => updateIngredient(item.id, "bahan_id", val)}>
-                      <SelectTrigger className="w-full bg-white [&>span]:truncate [&>span]:text-left">
+                      <SelectTrigger className="w-full bg-card [&>span]:truncate [&>span]:text-left">
                         <SelectValue placeholder="Pilih Bahan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -260,7 +260,7 @@ export function KalkulatorHppModal({ isOpen, setIsOpen, produk }: KalkulatorHppM
                         value={item.qty} 
                         onChange={(e) => updateIngredient(item.id, "qty", e.target.value)}
                         placeholder="Qty" 
-                        className="bg-white w-20 sm:w-24 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        className="bg-card w-20 sm:w-24 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                       />
                       <span className="text-sm font-medium text-slate-500 w-12 truncate" title={bahanBaku.find(b => b.id === item.bahan_id)?.satuan || ""}>
                         {bahanBaku.find(b => b.id === item.bahan_id)?.satuan || ""}
@@ -288,9 +288,9 @@ export function KalkulatorHppModal({ isOpen, setIsOpen, produk }: KalkulatorHppM
               
               <div className="space-y-2">
                 {packagings.map((item, index) => (
-                  <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 items-center bg-slate-50 p-2 rounded-md border">
+                  <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 items-center bg-muted/50 p-2 rounded-md border">
                     <Select value={item.packaging_id} onValueChange={(val) => updatePackaging(item.id, "packaging_id", val)}>
-                      <SelectTrigger className="w-full bg-white [&>span]:truncate [&>span]:text-left">
+                      <SelectTrigger className="w-full bg-card [&>span]:truncate [&>span]:text-left">
                         <SelectValue placeholder="Pilih Packaging" />
                       </SelectTrigger>
                       <SelectContent>
@@ -309,7 +309,7 @@ export function KalkulatorHppModal({ isOpen, setIsOpen, produk }: KalkulatorHppM
                         value={item.qty} 
                         onChange={(e) => updatePackaging(item.id, "qty", e.target.value)}
                         placeholder="Jumlah" 
-                        className="bg-white w-20 sm:w-24 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        className="bg-card w-20 sm:w-24 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                       />
                       <span className="text-sm font-medium text-slate-500 w-12 truncate" title="Pcs">
                         Pcs
@@ -368,7 +368,7 @@ export function KalkulatorHppModal({ isOpen, setIsOpen, produk }: KalkulatorHppM
           </div>
 
           {/* RIGHT SIDE: Summary / Preview */}
-          <div className="bg-slate-50 p-6 rounded-lg border h-fit sticky top-0">
+          <div className="bg-muted/50 p-6 rounded-lg border h-fit sticky top-0">
             <h3 className="font-bold text-lg mb-4 text-slate-800">Ringkasan Biaya</h3>
             
             <div className="space-y-3 text-sm">
@@ -426,7 +426,7 @@ export function KalkulatorHppModal({ isOpen, setIsOpen, produk }: KalkulatorHppM
             {history.length > 0 ? (
               <div className="space-y-4">
                 {history.map((hist) => (
-                  <div key={hist.id} className="p-4 border rounded-lg bg-slate-50 space-y-3">
+                  <div key={hist.id} className="p-4 border rounded-lg bg-muted/50 space-y-3">
                     <div className="flex justify-between items-start border-b pb-2">
                       <div className="flex items-center gap-2 text-slate-700">
                         <Clock className="h-4 w-4" />
@@ -459,7 +459,7 @@ export function KalkulatorHppModal({ isOpen, setIsOpen, produk }: KalkulatorHppM
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-lg border border-dashed">
+              <div className="text-center py-12 text-slate-500 bg-muted/50 rounded-lg border border-dashed">
                 Belum ada histori kalkulasi untuk produk ini.
               </div>
             )}

@@ -52,7 +52,7 @@ export function Step3Packaging() {
         <p className="text-sm text-muted-foreground mt-1">Tambahkan Box, Stiker, atau Plastik yang dipakai.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-slate-50 p-4 rounded-lg border">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-muted/50 p-4 rounded-lg border">
         <div className="space-y-2 md:col-span-2">
           <Label>Pilih Packaging</Label>
           <Select value={selectedPack} onValueChange={setSelectedPack}>

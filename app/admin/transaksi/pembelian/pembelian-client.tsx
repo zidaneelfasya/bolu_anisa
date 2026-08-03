@@ -64,9 +64,9 @@ export function PembelianClient({ data }: { data: any[] }) {
         </div>
       </div>
 
-      <div className="bg-white rounded-md border">
+      <div className="bg-card rounded-md border">
         <Table>
-          <TableHeader className="bg-slate-50">
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead>Tanggal</TableHead>
               <TableHead>Supplier</TableHead>
@@ -171,7 +171,7 @@ export function PembelianClient({ data }: { data: any[] }) {
                   <h4 className="font-semibold text-primary mb-2 text-sm">Bahan Baku</h4>
                   <div className="border rounded-md">
                     <Table>
-                      <TableHeader className="bg-slate-50">
+                      <TableHeader className="bg-muted/50">
                         <TableRow>
                           <TableHead className="py-2">Item</TableHead>
                           <TableHead className="py-2 text-right">Qty</TableHead>
@@ -199,7 +199,7 @@ export function PembelianClient({ data }: { data: any[] }) {
                   <h4 className="font-semibold text-orange-600 mb-2 text-sm">Packaging</h4>
                   <div className="border rounded-md">
                     <Table>
-                      <TableHeader className="bg-slate-50">
+                      <TableHeader className="bg-muted/50">
                         <TableRow>
                           <TableHead className="py-2">Item</TableHead>
                           <TableHead className="py-2 text-right">Qty</TableHead>
@@ -227,7 +227,7 @@ export function PembelianClient({ data }: { data: any[] }) {
                   <h4 className="font-semibold text-purple-600 mb-2 text-sm">Produk Jadi</h4>
                   <div className="border rounded-md">
                     <Table>
-                      <TableHeader className="bg-slate-50">
+                      <TableHeader className="bg-muted/50">
                         <TableRow>
                           <TableHead className="py-2">Item</TableHead>
                           <TableHead className="py-2 text-right">Qty</TableHead>
