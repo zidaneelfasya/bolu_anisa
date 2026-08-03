@@ -51,7 +51,8 @@ export function LaporanClient() {
   } = useMemo(() => {
     if (!data) return {
       saldoAwalKas: 0, pemasukanGrouped: [], pengeluaranGrouped: [],
-      totalPemasukan: 0, totalPengeluaran: 0, saldoAkhirKas: 0
+      totalPemasukan: 0, totalPengeluaran: 0, saldoAkhirKas: 0,
+      selisih: 0, statusSelisih: "Seimbang"
     };
 
     const saldoAwalKas = data.saldoAwalKas;
