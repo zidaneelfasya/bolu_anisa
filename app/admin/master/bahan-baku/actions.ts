@@ -29,20 +29,36 @@ export async function addBahanBaku(formData: FormData) {
   const supplier = formData.get("supplier") as string;
   const keterangan = formData.get("keterangan") as string;
 
-  const { error } = await supabase.from("bahan_baku").insert({
+  const stok = parseFloat(formData.get("stok") as string) || 0;
+
+  const { data: insertedData, error } = await supabase.from("bahan_baku").insert({
     nama,
     kategori,
     satuan,
     minimum_stok,
     supplier,
     keterangan,
-    stok: 0,
+    stok,
     harga_terakhir: 0,
     harga_rata_rata: 0,
-  });
+  }).select("id").single();
 
   if (error) {
     return { error: error.message };
+  }
+
+  if (stok > 0 && insertedData) {
+    await supabase.from("stock_movements").insert({
+      kategori_barang: "Bahan Baku",
+      barang_id: insertedData.id,
+      jenis_pergerakan: "Masuk",
+      jumlah: stok,
+      stok_sebelum: 0,
+      stok_sesudah: stok,
+      referensi: "Tambah Bahan Baku Baru",
+      keterangan: "Stok awal bahan baku baru",
+      user_id: null
+    });
   }
 
   revalidatePath("/admin/master/bahan-baku");
@@ -76,6 +92,12 @@ export async function updateBahanBaku(id: string, formData: FormData) {
   const supplier = formData.get("supplier") as string;
   const keterangan = formData.get("keterangan") as string;
 
+  const stok = parseFloat(formData.get("stok") as string) || 0;
+
+  // Ambil stok lama
+  const { data: oldData } = await supabase.from("bahan_baku").select("stok").eq("id", id).single();
+  const oldStok = oldData?.stok || 0;
+
   const { error } = await supabase
     .from("bahan_baku")
     .update({
@@ -85,11 +107,28 @@ export async function updateBahanBaku(id: string, formData: FormData) {
       minimum_stok,
       supplier,
       keterangan,
+      stok,
     })
     .eq("id", id);
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Log pergerakan jika stok berubah
+  if (oldStok !== stok) {
+    const selisih = Math.abs(stok - oldStok);
+    await supabase.from("stock_movements").insert({
+      kategori_barang: "Bahan Baku",
+      barang_id: id,
+      jenis_pergerakan: "Penyesuaian",
+      jumlah: selisih,
+      stok_sebelum: oldStok,
+      stok_sesudah: stok,
+      referensi: "Edit Manual",
+      keterangan: `Penyesuaian stok manual dari ${oldStok} menjadi ${stok}`,
+      user_id: null
+    });
   }
 
   revalidatePath("/admin/master/bahan-baku");

@@ -15,6 +15,7 @@ import {
   MoreVertical,
   LogOut,
   User,
+  History,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -80,6 +81,7 @@ export function Sidebar({
         { href: "/admin/hr/gaji", label: "Penggajian", icon: DollarSign },
         { href: "/admin/keuangan/cash-flow", label: "Cash Flow", icon: DollarSign },
         { href: "/admin/laporan", label: "Laporan", icon: FileText },
+        { href: "/admin/laporan/pergerakan-stok", label: "Pergerakan Stok", icon: History },
       ]
     },
     {

@@ -30,7 +30,7 @@ export async function addProduk(formData: FormData) {
   const stok = parseInt(formData.get("stok") as string) || 0;
   const keterangan = formData.get("keterangan") as string;
 
-  const { error } = await supabase.from("produk").insert({
+  const { data: insertedData, error } = await supabase.from("produk").insert({
     nama,
     kategori,
     harga_jual,
@@ -38,10 +38,24 @@ export async function addProduk(formData: FormData) {
     berat,
     stok,
     keterangan
-  });
+  }).select("id").single();
 
   if (error) {
     return { error: error.message };
+  }
+
+  if (stok > 0 && insertedData) {
+    await supabase.from("stock_movements").insert({
+      kategori_barang: "Produk Jadi",
+      barang_id: insertedData.id,
+      jenis_pergerakan: "Masuk",
+      jumlah: stok,
+      stok_sebelum: 0,
+      stok_sesudah: stok,
+      referensi: "Tambah Produk Baru",
+      keterangan: "Stok awal produk baru",
+      user_id: null // TODO
+    });
   }
 
   revalidatePath("/admin/master/produk");
@@ -75,6 +89,10 @@ export async function updateProduk(id: string, formData: FormData) {
   const stok = parseInt(formData.get("stok") as string) || 0;
   const keterangan = formData.get("keterangan") as string;
 
+  // Ambil stok lama
+  const { data: oldData } = await supabase.from("produk").select("stok").eq("id", id).single();
+  const oldStok = oldData?.stok || 0;
+
   const { error } = await supabase.from("produk")
     .update({
       nama,
@@ -89,6 +107,22 @@ export async function updateProduk(id: string, formData: FormData) {
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Log pergerakan jika stok berubah
+  if (oldStok !== stok) {
+    const selisih = Math.abs(stok - oldStok);
+    await supabase.from("stock_movements").insert({
+      kategori_barang: "Produk Jadi",
+      barang_id: id,
+      jenis_pergerakan: "Penyesuaian",
+      jumlah: selisih,
+      stok_sebelum: oldStok,
+      stok_sesudah: stok,
+      referensi: "Edit Manual",
+      keterangan: `Penyesuaian stok manual dari ${oldStok} menjadi ${stok}`,
+      user_id: null
+    });
   }
 
   revalidatePath("/admin/master/produk");
@@ -228,11 +262,28 @@ export async function importProduk(formData: FormData) {
     const supabase = await createClient();
     
     // Insert products in batches if large, but for typical excel files this is fine
-    const { error } = await supabase.from('produk').insert(productsToInsert);
+    const { data: insertedProducts, error } = await supabase.from('produk').insert(productsToInsert).select("id, stok");
 
     if (error) {
       console.error('Error inserting imported products:', error);
       return { error: error.message };
+    }
+
+    if (insertedProducts && insertedProducts.length > 0) {
+      const movements = insertedProducts.filter(p => p.stok > 0).map(p => ({
+        kategori_barang: "Produk Jadi",
+        barang_id: p.id,
+        jenis_pergerakan: "Masuk",
+        jumlah: p.stok,
+        stok_sebelum: 0,
+        stok_sesudah: p.stok,
+        referensi: "Import Produk",
+        keterangan: "Stok awal dari import excel",
+        user_id: null
+      }));
+      if (movements.length > 0) {
+        await supabase.from("stock_movements").insert(movements);
+      }
     }
 
     revalidatePath('/admin/master/produk');

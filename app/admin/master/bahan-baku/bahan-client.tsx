@@ -150,6 +150,10 @@ export function BahanBakuClient({ initialData }: { initialData: any[] }) {
                   <Label htmlFor="min_stok">Minimal Stok</Label>
                   <Input id="min_stok" name="min_stok" type="number" min="0" step="0.1" defaultValue={editingItem?.minimum_stok || ""} placeholder="0" required className="w-full" />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="stok">Stok Saat Ini</Label>
+                  <Input id="stok" name="stok" type="number" min="0" step="0.1" defaultValue={editingItem?.stok || "0"} placeholder="0" required className="w-full" />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="supplier">Supplier <span className="text-muted-foreground text-sm font-normal">(Opsional)</span></Label>
