@@ -68,6 +68,8 @@ export async function submitPenjualan(payload: any) {
 
   if (rpcErr) {
     console.error("RPC Error:", rpcErr);
+    // ROLLBACK manually
+    await supabase.from("penjualan").delete().eq("id", penjualanId);
     return { error: "Gagal memproses stok dan cash flow: " + rpcErr.message };
   }
 

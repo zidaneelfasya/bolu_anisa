@@ -102,6 +102,8 @@ export async function submitPembelian(payload: any) {
 
   if (rpcErr) {
     console.error("RPC Error:", rpcErr);
+    // ROLLBACK manually
+    await supabase.from("pembelian").delete().eq("id", pembelianId);
     return { error: "Gagal memproses stok dan cash flow: " + rpcErr.message };
   }
 

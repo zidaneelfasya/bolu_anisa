@@ -148,7 +148,7 @@ export function BahanBakuClient({ initialData }: { initialData: any[] }) {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="min_stok">Minimal Stok</Label>
-                  <Input id="min_stok" name="min_stok" type="number" step="0.1" defaultValue={editingItem?.minimum_stok || ""} placeholder="0" required className="w-full" />
+                  <Input id="min_stok" name="min_stok" type="number" min="0" step="0.1" defaultValue={editingItem?.minimum_stok || ""} placeholder="0" required className="w-full" />
                 </div>
               </div>
               <div className="space-y-2">

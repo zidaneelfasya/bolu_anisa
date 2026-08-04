@@ -180,7 +180,7 @@ export function ProdukClient({ initialData }: { initialData: any[] }) {
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="stok" className="text-right">Stok Awal</Label>
-                  <Input id="stok" name="stok" type="number" required className="col-span-3" placeholder="0" />
+                  <Input id="stok" name="stok" type="number" min="0" required className="col-span-3" placeholder="0" />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="keterangan" className="text-right">Keterangan</Label>
@@ -231,7 +231,7 @@ export function ProdukClient({ initialData }: { initialData: any[] }) {
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit_stok" className="text-right">Stok Awal</Label>
-                    <Input id="edit_stok" name="stok" type="number" defaultValue={selectedProdukEdit.stok} required className="col-span-3" />
+                    <Input id="edit_stok" name="stok" type="number" min="0" defaultValue={selectedProdukEdit.stok} required className="col-span-3" />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit_keterangan" className="text-right">Keterangan</Label>

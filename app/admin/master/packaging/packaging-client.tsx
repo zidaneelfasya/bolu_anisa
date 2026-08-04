@@ -115,11 +115,11 @@ export function PackagingClient({ initialData }: { initialData: any[] }) {
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="stok" className="text-right">Stok Awal</Label>
-                  <Input id="stok" name="stok" type="number" required className="col-span-3" placeholder="0" />
+                  <Input id="stok" name="stok" type="number" min="0" required className="col-span-3" placeholder="0" />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="minimum_stok" className="text-right">Min. Stok</Label>
-                  <Input id="minimum_stok" name="minimum_stok" type="number" className="col-span-3" placeholder="0" />
+                  <Input id="minimum_stok" name="minimum_stok" type="number" min="0" className="col-span-3" placeholder="0" />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="keterangan" className="text-right">Keterangan</Label>
@@ -163,11 +163,11 @@ export function PackagingClient({ initialData }: { initialData: any[] }) {
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-stok" className="text-right">Stok Saat Ini</Label>
-                    <Input id="edit-stok" name="stok" type="number" defaultValue={editingItem.stok} required className="col-span-3" placeholder="0" />
+                    <Input id="edit-stok" name="stok" type="number" min="0" defaultValue={editingItem.stok} required className="col-span-3" placeholder="0" />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-minimum_stok" className="text-right">Min. Stok</Label>
-                    <Input id="edit-minimum_stok" name="minimum_stok" type="number" defaultValue={editingItem.minimum_stok} className="col-span-3" placeholder="0" />
+                    <Input id="edit-minimum_stok" name="minimum_stok" type="number" min="0" defaultValue={editingItem.minimum_stok} className="col-span-3" placeholder="0" />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-keterangan" className="text-right">Keterangan</Label>

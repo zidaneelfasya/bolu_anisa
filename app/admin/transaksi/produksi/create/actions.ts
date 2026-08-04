@@ -113,9 +113,8 @@ export async function submitProduksi(payload: any) {
     return { success: true };
 
   } catch (err: any) {
-    // Jika gagal, kembalikan error. 
-    // Note: Anda mungkin perlu membuat logic kompensasi delete draft produksi jika gagal sebelum RPC dipanggil.
-    // Tetapi karena ini tahap awal, kembalikan pesan error ke UI.
+    // Jika gagal, rollback draft produksi
+    await supabase.from("produksi").delete().eq("id", produksiId);
     return { error: err.message };
   }
 }
